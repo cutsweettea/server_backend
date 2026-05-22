@@ -1,0 +1,37 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "serva backend",
+  "homepage": "https://github.com/cutsweettea/server_backend#readme",
+  "bugs": {
+    "url": "https://github.com/cutsweettea/server_backend/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cutsweettea/server_backend.git"
+  },
+  "license": "ISC",
+  "author": "blacktears",
+  "type": "module",
+  "main": "src/server.ts",
+  "scripts": {
+    "build": "tsc && tsc-esm-fix --ext .js",
+    "server": "node dist/server.js",
+    "dev": "nodemon src/server.ts"
+  },
+  "devDependencies": {
+    "@types/dotenv": "^6.1.1",
+    "@types/express": "^5.0.6",
+    "@types/node": "^25.9.1",
+    "eslint": "^10.4.0",
+    "nodemon": "^3.1.14",
+    "prettier": "^3.8.3",
+    "tsc-esm-fix": "^3.1.2",
+    "typescript": "^6.0.3"
+  },
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "ts-node": "^10.9.2"
+  }
+}
