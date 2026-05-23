@@ -11,6 +11,12 @@ interface RegistrationProps {
     callbackOpts: RouteCallbackOptions
 }
 
+interface RegistrationSetTypeProps {
+    path: string,
+    defCallbackOpts?: RouteCallbackOptions
+    adminCallbackOpts?: RouteCallbackOptions
+}
+
 interface RouteCallbackOptions {
     callback: RouteCallback,
     requiredBodyValues?: string[],
@@ -34,6 +40,11 @@ class RouteRegistrar {
     constructor(serv: express.Application) {
         // construct this immediately!!!!
         this.serv = serv;
+    }
+
+    public routeCount(): number {
+        // count up dem paths
+        return this.registeredPaths.length;
     }
 
     private defaultHandler(req: express.Request, res: express.Response, opts: RouteCallbackOptions) {
@@ -63,9 +74,7 @@ class RouteRegistrar {
 
     private async registerRoute({ path, type, callbackOpts }: RegistrationProps): Promise<boolean> {
         // check if path is already registered, return false if so
-        if(path in this.registeredPaths) {
-            return Promise.reject(`path ${path} already registered`);
-        }
+        if(this.registeredPaths.includes(path)) return Promise.reject(`path ${path} already registered`);
 
         // auughh switch case case case
         switch(type) {
@@ -88,26 +97,27 @@ class RouteRegistrar {
         return true;
     }
 
-    public async register(path: string, type: RequestType, defCallbackOpts: RouteCallbackOptions, adminCallbackOpts?: RouteCallbackOptions): Promise<boolean> {
+    public async register(path: string, type: RequestType, defCallbackOpts?: RouteCallbackOptions, adminCallbackOpts?: RouteCallbackOptions): Promise<boolean> {
         // setup results (admin is true cuz it may not exec)
-        let def_res = false;
+        let def_res = true;
         let admin_res = true;
         try {
-            def_res = await this.registerRoute({ path, type, callbackOpts: defCallbackOpts });
+            if(defCallbackOpts) def_res = await this.registerRoute({ path, type, callbackOpts: defCallbackOpts });
             if(adminCallbackOpts) admin_res = await this.registerAdmin({ path, type, callbackOpts: adminCallbackOpts });
         } catch(e) {
             return Promise.reject(e);
         }
 
-        return def_res && admin_res;
+        // returns true when either default callback is set or admin callback is set
+        return (def_res && admin_res) && (!(!defCallbackOpts) && !(!adminCallbackOpts));
     }
 
-    public async get(path: string, defCallbackOpts: RouteCallbackOptions, adminCallbackOpts?: RouteCallbackOptions): Promise<boolean> {
+    public async get({ path, defCallbackOpts, adminCallbackOpts}: RegistrationSetTypeProps): Promise<boolean> {
         // simplified method to register GET route
         return await this.register(path, RequestType.GET, defCallbackOpts, adminCallbackOpts);
     }
 
-    public async post(path: string, defCallbackOpts: RouteCallbackOptions, adminCallbackOpts?: RouteCallbackOptions): Promise<boolean> {
+    public async post({ path, defCallbackOpts, adminCallbackOpts}: RegistrationSetTypeProps): Promise<boolean> {
         // simplified method to register POST route
         return await this.register(path, RequestType.POST, defCallbackOpts, adminCallbackOpts);
     }
