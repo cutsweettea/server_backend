@@ -9,13 +9,11 @@ export interface RouteCallback {
 interface RegistrationProps {
     path: string,
     type: RequestType,
-    callbackOpts: RouteCallbackOptions,
-    db: Database
+    callbackOpts: RouteCallbackOptions
 }
 
 interface RegistrationSetTypeProps {
     path: string,
-    db: Database,
     defCallbackOpts?: RouteCallbackOptions
     adminCallbackOpts?: RouteCallbackOptions
 }
@@ -38,11 +36,13 @@ type RequestType = typeof RequestType[keyof typeof RequestType];
 // my super duper awesome epic middleware type thing
 class RouteRegistrar {
     private serv: express.Application;
+    private db: Database;
     private registeredPaths: string[] = [];
 
-    constructor(serv: express.Application) {
+    constructor(serv: express.Application, db: Database) {
         // construct this immediately!!!!
         this.serv = serv;
+        this.db = db;
     }
 
     public routeCount(): number {
@@ -75,23 +75,23 @@ class RouteRegistrar {
         opts.callback(req, res, db);
     }
 
-    private async registerRoute({ path, type, callbackOpts, db }: RegistrationProps): Promise<boolean> {
+    private async registerRoute({ path, type, callbackOpts }: RegistrationProps): Promise<boolean> {
         // check if path is already registered, return false if so
         if(this.registeredPaths.includes(path)) return Promise.reject(`path ${path} already registered`);
 
         // auughh switch case case case
         switch(type) {
             case RequestType.GET: 
-                this.serv.router.get(path, (req, res) => this.defaultHandler(req, res, callbackOpts, db));
+                this.serv.router.get(path, (req, res) => this.defaultHandler(req, res, callbackOpts, this.db));
                 break;
             case RequestType.POST: 
-                this.serv.router.post(path, (req, res) => this.defaultHandler(req, res, callbackOpts, db));
+                this.serv.router.post(path, (req, res) => this.defaultHandler(req, res, callbackOpts, this.db));
                 break;
             case RequestType.PATCH: 
-                this.serv.router.patch(path, (req, res) => this.defaultHandler(req, res, callbackOpts, db));
+                this.serv.router.patch(path, (req, res) => this.defaultHandler(req, res, callbackOpts, this.db));
                 break;
             case RequestType.OPTIONS: 
-                this.serv.router.options(path, (req, res) => this.defaultHandler(req, res, callbackOpts, db));
+                this.serv.router.options(path, (req, res) => this.defaultHandler(req, res, callbackOpts, this.db));
                 break;
             default: return Promise.reject(`unknown request type ${type}`);
         }
@@ -100,13 +100,13 @@ class RouteRegistrar {
         return true;
     }
 
-    public async register(path: string, type: RequestType, db: Database, defCallbackOpts?: RouteCallbackOptions, adminCallbackOpts?: RouteCallbackOptions): Promise<boolean> {
+    public async register(path: string, type: RequestType, defCallbackOpts?: RouteCallbackOptions, adminCallbackOpts?: RouteCallbackOptions): Promise<boolean> {
         // setup results (admin is true cuz it may not exec)
         let def_res = true;
         let admin_res = true;
         try {
-            if(defCallbackOpts) def_res = await this.registerRoute({ path, type, callbackOpts: defCallbackOpts, db });
-            if(adminCallbackOpts) admin_res = await this.registerAdmin({ path, type, callbackOpts: adminCallbackOpts, db });
+            if(defCallbackOpts) def_res = await this.registerRoute({ path, type, callbackOpts: defCallbackOpts });
+            if(adminCallbackOpts) admin_res = await this.registerAdmin({ path, type, callbackOpts: adminCallbackOpts });
         } catch(e) {
             return Promise.reject(e);
         }
@@ -115,29 +115,29 @@ class RouteRegistrar {
         return (def_res && admin_res) && (!(!defCallbackOpts) && !(!adminCallbackOpts));
     }
 
-    public async get({ path, db, defCallbackOpts, adminCallbackOpts }: RegistrationSetTypeProps): Promise<boolean> {
+    public async get({ path, defCallbackOpts, adminCallbackOpts }: RegistrationSetTypeProps): Promise<boolean> {
         // simplified method to register GET route
-        return await this.register(path, RequestType.GET, db, defCallbackOpts, adminCallbackOpts);
+        return await this.register(path, RequestType.GET, defCallbackOpts, adminCallbackOpts);
     }
 
-    public async post({ path, db, defCallbackOpts, adminCallbackOpts}: RegistrationSetTypeProps): Promise<boolean> {
+    public async post({ path, defCallbackOpts, adminCallbackOpts}: RegistrationSetTypeProps): Promise<boolean> {
         // simplified method to register POST route
-        return await this.register(path, RequestType.POST, db, defCallbackOpts, adminCallbackOpts);
+        return await this.register(path, RequestType.POST, defCallbackOpts, adminCallbackOpts);
     }
 
-    public async registerDefault({ path, type, callbackOpts, db }: RegistrationProps): Promise<boolean> {
+    public async registerDefault({ path, type, callbackOpts }: RegistrationProps): Promise<boolean> {
         // error if path starts with /admin
         if(path.startsWith('/admin')) {
             return Promise.reject(`path "${path}" cannot start with /admin`);
         }
 
         // register route
-        return await this.registerRoute({ path, type, callbackOpts, db });
+        return await this.registerRoute({ path, type, callbackOpts });
     }
 
-    public async registerAdmin({ path, type, callbackOpts, db }: RegistrationProps) {
+    public async registerAdmin({ path, type, callbackOpts }: RegistrationProps) {
         // just register path with /admin in the front
-        return await this.registerRoute({ path: `/admin${path}`, type, callbackOpts, db });
+        return await this.registerRoute({ path: `/admin${path}`, type, callbackOpts });
     }
 
     public getServer(): express.Application {

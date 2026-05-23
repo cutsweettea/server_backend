@@ -10,16 +10,15 @@ const serv = express();
 serv.use(express.json({ limit: '25kb' }));
 serv.use(cookieParser(process.env.CKSEC));
 
-// setup routes
-const rr = new RouteRegistrar(serv);
-
 // setup db
 const db = new Database();
+
+// setup routes
+const rr = new RouteRegistrar(serv, db);
 
 async function registerRoutes() {
     await rr.get({
         path: '/cookie',
-        db,
         defCallbackOpts: {
             callback: (req, res) => {
                 return res.status(200).send('yay');
