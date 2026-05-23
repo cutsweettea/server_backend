@@ -3,6 +3,7 @@ import RouteRegistrar from './routes/registrar.ts';
 import conf from './config.ts';
 import cookieParser from 'cookie-parser';
 import { generateResponse } from './util.ts';
+import Database from './db/database.ts';
 
 // setup server and middleware
 const serv = express();
@@ -12,9 +13,13 @@ serv.use(cookieParser(process.env.CKSEC));
 // setup routes
 const rr = new RouteRegistrar(serv);
 
+// setup db
+const db = new Database();
+
 async function registerRoutes() {
     await rr.get({
         path: '/cookie',
+        db,
         defCallbackOpts: {
             callback: (req, res) => {
                 return res.status(200).send('yay');
