@@ -8,13 +8,13 @@ export interface RouteCallback {
 interface RegistrationProps {
     path: string,
     type: RequestType,
-    callbackOpts: RouteCallbackOptions,
-    adminCallbackOpts?: RouteCallbackOptions
+    callbackOpts: RouteCallbackOptions
 }
 
 interface RouteCallbackOptions {
     callback: RouteCallback,
-    requiredBodyValues?: string[]
+    requiredBodyValues?: string[],
+    requiredCookies?: string[]
 }
 
 // what the fuck is this
@@ -26,49 +26,65 @@ export const RequestType = {
 } as const;
 type RequestType = typeof RequestType[keyof typeof RequestType];
 
+// my super duper awesome epic middleware type thing
 class RouteRegistrar {
     private serv: express.Application;
+    private registeredPaths: string[] = [];
 
     constructor(serv: express.Application) {
         // construct this immediately!!!!
         this.serv = serv;
     }
 
-    private defaultHandler(req: express.Request, res: express.Response, callback: RouteCallback, requiredBodyValues?: string[]) {
-        if(requiredBodyValues) {
+    private defaultHandler(req: express.Request, res: express.Response, opts: RouteCallbackOptions) {
+        if(opts.requiredBodyValues) {
             // checks for required body values if specified
             if(!req.body) return res.status(400).send(generateResponse(false, 'no body brah'));
-            for(let i = 0; i < requiredBodyValues.length; i++) {
-                // checks each value to see if in body, returning 400 status if not
-                let v = requiredBodyValues[i];
-                if(!v) return res.status(400).send(generateResponse(false, 'erm'));
+            for(let i = 0; i < opts.requiredBodyValues.length; i++) {
+                // check for each value to see if in body, returning 400 status if not
+                let v = opts.requiredBodyValues[i];
+                if(!v) continue;
                 if(!(v in req.body)) return res.status(400).send(generateResponse(false, 'missing body value'));
             }
         }
 
+        if(opts.requiredCookies) {
+            for(let i = 0; i < opts.requiredCookies.length; i++) {
+                // check for each value to see if is cookie
+                let v = opts.requiredCookies[i];
+                if(!v) continue;
+                if(!(v in req.signedCookies)) return res.status(400).send(generateResponse(false, 'missing cookie'));
+            }
+        }
+
         // callback if everything succeeds
-        callback(req, res);
+        opts.callback(req, res);
     }
 
-    private registerRoute({ path, type, callbackOpts }: RegistrationProps): boolean {
-        console.log(`registered route "${path}" w type ${type.toString()}`);
+    private async registerRoute({ path, type, callbackOpts }: RegistrationProps): Promise<boolean> {
+        // check if path is already registered, return false if so
+        if(path in this.registeredPaths) {
+            return Promise.reject(`path ${path} already registered`);
+        }
+
         // auughh switch case case case
         switch(type) {
             case RequestType.GET: 
-                this.serv.router.get(path, (req, res) => this.defaultHandler(req, res, callbackOpts.callback, callbackOpts.requiredBodyValues));
+                this.serv.router.get(path, (req, res) => this.defaultHandler(req, res, callbackOpts));
                 break;
             case RequestType.POST: 
-                this.serv.router.post(path, (req, res) => this.defaultHandler(req, res, callbackOpts.callback, callbackOpts.requiredBodyValues));
+                this.serv.router.post(path, (req, res) => this.defaultHandler(req, res, callbackOpts));
                 break;
             case RequestType.PATCH: 
-                this.serv.router.patch(path, (req, res) => this.defaultHandler(req, res, callbackOpts.callback, callbackOpts.requiredBodyValues));
+                this.serv.router.patch(path, (req, res) => this.defaultHandler(req, res, callbackOpts));
                 break;
             case RequestType.OPTIONS: 
-                this.serv.router.options(path, (req, res) => this.defaultHandler(req, res, callbackOpts.callback, callbackOpts.requiredBodyValues));
+                this.serv.router.options(path, (req, res) => this.defaultHandler(req, res, callbackOpts));
                 break;
-            default: return false;
+            default: return Promise.reject(`unknown request type ${type}`);
         }
 
+        this.registeredPaths.push(path);
         return true;
     }
 
@@ -77,19 +93,23 @@ class RouteRegistrar {
         let def_res = false;
         let admin_res = true;
         try {
-            def_res = this.registerRoute({ path, type, callbackOpts: {
-                callback: defCallbackOpts.callback,
-                requiredBodyValues: defCallbackOpts.requiredBodyValues
-            } });
-            if(adminCallbackOpts) admin_res = this.registerAdmin({ path, type, callbackOpts: {
-                callback: adminCallbackOpts.callback,
-                requiredBodyValues: adminCallbackOpts.requiredBodyValues
-            }});
+            def_res = await this.registerRoute({ path, type, callbackOpts: defCallbackOpts });
+            if(adminCallbackOpts) admin_res = await this.registerAdmin({ path, type, callbackOpts: adminCallbackOpts });
         } catch(e) {
             return Promise.reject(e);
         }
 
         return def_res && admin_res;
+    }
+
+    public async get(path: string, defCallbackOpts: RouteCallbackOptions, adminCallbackOpts?: RouteCallbackOptions): Promise<boolean> {
+        // simplified method to register GET route
+        return await this.register(path, RequestType.GET, defCallbackOpts, adminCallbackOpts);
+    }
+
+    public async post(path: string, defCallbackOpts: RouteCallbackOptions, adminCallbackOpts?: RouteCallbackOptions): Promise<boolean> {
+        // simplified method to register POST route
+        return await this.register(path, RequestType.POST, defCallbackOpts, adminCallbackOpts);
     }
 
     public async registerDefault({ path, type, callbackOpts }: RegistrationProps): Promise<boolean> {
@@ -99,12 +119,12 @@ class RouteRegistrar {
         }
 
         // register route
-        return this.registerRoute({ path, type, callbackOpts });
+        return await this.registerRoute({ path, type, callbackOpts });
     }
 
-    public registerAdmin({ path, type, callbackOpts }: RegistrationProps) {
+    public async registerAdmin({ path, type, callbackOpts }: RegistrationProps) {
         // just register path with /admin in the front
-        return this.registerRoute({ path: `/admin${path}`, type, callbackOpts });
+        return await this.registerRoute({ path: `/admin${path}`, type, callbackOpts });
     }
 
     public getServer(): express.Application {
