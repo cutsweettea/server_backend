@@ -6,7 +6,15 @@ export async function defCreateAccount({ req, res, db }: RouteCallbackProps) {
     const usn: string = req.body.user_name!;
     const pwd: string = req.body.pwd!;
     const refer: string = req.body.refer!;
-    console.log(`creating account with ln=${ln}, usn=${usn}, pwd=${pwd}, refer=${refer}`);
+    
+    // attempt to create user
+    let salt;
+    try {
+        salt = await db.getUsers().createUser(ln, usn, pwd, refer);
+    } catch(e) {
+        console.error(e);
+        return res.status(400).send(generateResponse(false, 'didnt work rip'));
+    }
 
-    return res.status(400).json(generateResponse(false, 'ntnt'));
+    return res.status(200).send(generateResponse(true, salt));
 }

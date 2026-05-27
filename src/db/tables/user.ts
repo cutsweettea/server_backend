@@ -16,25 +16,27 @@ export default class Users implements IUsers {
         // hash password and extract salt
         const pwd_info = await extractSalt(await defaultHash(pwd));
 
-        // check if referral is valid
-        let ref_valid;
-        try {
-            ref_valid = await this.db.getRefers().isValid(refer);
-        } catch(e) {
-            return Promise.reject(e);
+        if(!skip_refer) {
+            // check if referral is valid
+            let ref_valid;
+            try {
+                ref_valid = await this.db.getRefers().isValid(refer);
+            } catch(e) {
+                return Promise.reject(e);
+            }
+
+            if(!ref_valid) return Promise.reject('invalid ref');
+
+            // if refer is valid, increase use by 1
+            let increase_res;
+            try {
+                increase_res = await this.db.getRefers().useRefer(refer);
+            } catch(e) {
+                return Promise.reject(e);
+            }
+
+            if(!increase_res) return Promise.reject('failed increasing ref count');
         }
-
-        if(!ref_valid) return Promise.reject('invalid ref');
-
-        // if refer is valid, increase use by 1
-        let increase_res;
-        try {
-            increase_res = await this.db.getRefers().useRefer(refer);
-        } catch(e) {
-            return Promise.reject(e);
-        }
-
-        if(!increase_res) return Promise.reject('failed increasing ref count');
 
         // generate random tag if not specified
         let set_tag;
