@@ -11,7 +11,7 @@ export interface RouteCallbackProps {
 }
 
 export interface RouteCallback {
-    ({ req, res, db }: RouteCallbackProps): express.Response
+    ({ req, res, db }: RouteCallbackProps): Promise<express.Response>
 }
 
 interface RegistrationProps {

@@ -7,8 +7,9 @@ import Database from './db/database.ts';
 import { defCreateAccount } from './routes/default/users.ts';
 import { adminCreateAccount } from './routes/admin/users.ts';
 import z from 'zod';
-import { ADMIN_ACCOUNT_CREATE_BODY_STRUCT, ACCOUNT_CREATE_BODY_STRUCT, ADMIN_SESSION, BIO_FIELD, LOGIN_NAME_FIELD, PFP_URL_FIELD, PGP_FIELD, PWD_FIELD, RANK_FIELD, REFER_FIELD, TAG_FIELD, USER_NAME_FIELD, ADMIN_ACCOUNT_CREATE_COOKIE_STRUCT } from './consts.ts';
+import { ADMIN_ACCOUNT_CREATE_BODY_STRUCT, ACCOUNT_CREATE_BODY_STRUCT, ADMIN_SESSION, BIO_FIELD, LOGIN_NAME_FIELD, PFP_URL_FIELD, PGP_FIELD, PWD_FIELD, RANK_FIELD, REFER_FIELD, TAG_FIELD, USER_NAME_FIELD, ADMIN_REFER_CREATE_BODY_STRUCT } from './consts.ts';
 import { devCreateAccount } from './routes/dev/users.ts';
+import { devCreateReferral } from './routes/dev/refers.ts';
 
 // setup server and middleware
 const serv = express();
@@ -39,6 +40,15 @@ async function registerRoutes() {
         defCallbackOpts: {
             callback: devCreateAccount,
             requiredBodyValues: ADMIN_ACCOUNT_CREATE_BODY_STRUCT
+        },
+        dev: true
+    })
+
+    await rr.post({
+        path: '/dev/refer/create',
+        defCallbackOpts: {
+            callback: devCreateReferral,
+            requiredBodyValues: ADMIN_REFER_CREATE_BODY_STRUCT
         },
         dev: true
     })
