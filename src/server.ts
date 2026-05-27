@@ -4,6 +4,8 @@ import conf from './config.ts';
 import cookieParser from 'cookie-parser';
 import { generateResponse } from './util.ts';
 import Database from './db/database.ts';
+import { defCreateAccount } from './routes/default/users.ts';
+import { adminCreateAccount } from './routes/admin/users.ts';
 
 // setup server and middleware
 const serv = express();
@@ -17,25 +19,17 @@ const db = new Database();
 const rr = new RouteRegistrar(serv, db);
 
 async function registerRoutes() {
-    await rr.get({
-        path: '/cookie',
+    // account creation
+    await rr.post({
+        path: '/account/create',
         defCallbackOpts: {
-            callback: (req, res) => {
-                return res.status(200).send('yay');
-            },
-            requiredCookies: ['cookie']
+            callback: defCreateAccount,
+            requiredBodyValues: ['login_name', 'user_name', 'pwd', 'refer']
         },
         adminCallbackOpts: {
-            callback: (req, res) => {
-                return res.status(200).cookie('cookie', 'abc123', {
-                    httpOnly: conf.prod,
-                    maxAge: 60*60*24,
-                    path: '/',
-                    secure: conf.prod,
-                    signed: true,
-                    sameSite: conf.prod ? 'none' : 'lax'
-                }).send(generateResponse(true, 'heres ur cookie'));
-            }
+            callback: adminCreateAccount,
+            requiredBodyValues: ['login_name', 'user_name', 'tag', 'pwd', 'pgp', 'rank', 'refer', 'pfp_url', 'bio'],
+            requiredCookies: ['asid']
         }
     });
 }

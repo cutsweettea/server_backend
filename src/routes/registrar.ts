@@ -2,8 +2,14 @@ import express from 'express';
 import { generateResponse } from '../util.ts';
 import Database from '../db/database.ts';
 
+export interface RouteCallbackProps {
+    req: express.Request,
+    res: express.Response,
+    db: Database
+}
+
 export interface RouteCallback {
-    (req: express.Request, res: express.Response, db: Database): express.Response
+    ({ req, res, db }: RouteCallbackProps): express.Response
 }
 
 interface RegistrationProps {
@@ -72,7 +78,7 @@ class RouteRegistrar {
         }
 
         // callback if everything succeeds
-        opts.callback(req, res, db);
+        opts.callback({ req, res, db });
     }
 
     private async registerRoute({ path, type, callbackOpts }: RegistrationProps): Promise<boolean> {
