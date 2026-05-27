@@ -1,5 +1,5 @@
 import { pgTable, integer, varchar, text, timestamp } from "drizzle-orm/pg-core";
-import { BIO_MAX_LEN, LOGIN_NAME_MAX_LEN, PFP_URL_MAX_LEN, PGP_MAX_LEN, PWD_HASH_MAX_LEN, REFER_MAX_LEN, TAG_MAX_LEN, USER_NAME_MAX_LEN } from "../consts";
+import { BIO_MAX_LEN, LOGIN_NAME_MAX_LEN, PFP_URL_MAX_LEN, PGP_MAX_LEN, PWD_HASH_MAX_LEN, REFER_MAX_LEN, TAG_MAX_LEN, USER_NAME_MAX_LEN } from "../consts.ts";
 
 export const usersTable = pgTable("users", {
     id: integer().primaryKey().generatedAlwaysAsIdentity(),
