@@ -64,3 +64,12 @@ export const ADMIN_REFER_CREATE_BODY_STRUCT = z.object({
     link: REF_LINK_FIELD,
     max_uses: NONZERO_INT
 });
+
+export const DEV_REFER_USE_BODY_STRUCT = z.object({
+    link: REF_LINK_FIELD
+});
+
+export const DEV_REFER_SET_BODY_STRUCT = z.object({
+    link: REF_LINK_FIELD,
+    uses: NONZERO_INT
+});
