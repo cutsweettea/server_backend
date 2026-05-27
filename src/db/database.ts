@@ -2,11 +2,13 @@ import { drizzle, NodePgDatabase } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 import conf from "../config.ts";
 import { sql } from "drizzle-orm";
-import Dev from "./dev/dev.ts";
+import Users from "./tables/user.ts";
+import Refers from "./tables/refer.ts";
 
 export default class Database {
     private db: NodePgDatabase;
-    private dev: Dev;
+    private users: Users;
+    private refers: Refers;
 
     constructor() {
         // connect with da drizzleanator
@@ -16,7 +18,8 @@ export default class Database {
 
         this.testDbConnection();
 
-        this.dev = new Dev(this);
+        this.users = new Users(this);
+        this.refers = new Refers(this);
     }
 
     private async testDbConnection(): Promise<boolean> {
@@ -36,8 +39,13 @@ export default class Database {
         return this.db;
     }
 
-    public getDev(): Dev {
+    public getUsers(): Users {
         // do i need to write comments for these, no. will i, yes
-        return this.dev;
+        return this.users;
+    }
+
+    public getRefers(): Refers {
+        // yep ill continue writing comments thank u
+        return this.refers;
     }
 }

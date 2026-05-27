@@ -50,10 +50,10 @@ export const ACCOUNT_CREATE_BODY_STRUCT = z.object({
 export const ADMIN_ACCOUNT_CREATE_BODY_STRUCT = z.object({
     login_name: LOGIN_NAME_FIELD,
     user_name: USER_NAME_FIELD,
-    tag: TAG_FIELD,
+    tag: TAG_FIELD.optional(),
     pwd: PWD_FIELD,
     pgp: PGP_FIELD.optional(),
-    rank: RANK_FIELD,
+    rank: RANK_FIELD.optional(),
     refer: REFER_FIELD,
     pfp_url: PFP_URL_FIELD.optional(),
     bio: BIO_FIELD.optional()

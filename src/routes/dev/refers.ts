@@ -9,7 +9,7 @@ export async function devCreateReferral({ req, res, db }: RouteCallbackProps) {
     // create referral
     let create_res;
     try {
-        create_res = await db.getDev().getRefers().createRefer(uid, link, max_uses);
+        create_res = await db.getRefers().createRefer(uid, link, max_uses);
     } catch(e) {
         console.log(e);
         return res.status(400).send(generateResponse(false, 'dont think soo'));
@@ -26,7 +26,7 @@ export async function devUseReferral({ req, res, db }: RouteCallbackProps) {
     // use the link and increases uses by 1
     let update_res;
     try {
-        update_res = await db.getDev().getRefers().useRefer(link);
+        update_res = await db.getRefers().useRefer(link);
     } catch(e) {
         console.error(e);
         return res.status(400).send(generateResponse(false, 'whoops, didnt work'));
@@ -44,7 +44,7 @@ export async function devSetReferralUses({ req, res, db }: RouteCallbackProps) {
     // set referral uses amount
     let update_res;
     try {
-        update_res = await db.getDev().getRefers().setReferUses(link, uses);
+        update_res = await db.getRefers().setReferUses(link, uses);
     } catch(e) {
         console.error(e);
         return res.status(400).send(generateResponse(false, 'uh oh! didnt work'));

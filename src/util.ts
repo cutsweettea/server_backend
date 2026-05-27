@@ -42,7 +42,7 @@ export const defaultVerify = async (hash: string, text: string): Promise<boolean
     return await argon2.verify(hash, text);
 }
 
-function genRandom(length: number): string {
+export function genRandom(length: number): string {
     const rndb = new Uint8Array(length);
     crypto.getRandomValues(rndb);
 

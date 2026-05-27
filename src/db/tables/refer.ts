@@ -25,7 +25,7 @@ export default class Refers implements IRefers {
         }
 
         // reject if nothing updates or throws error
-        if(insert_res.length == 0) return Promise.reject('inserted zero records');
+        if(insert_res.length == 0) return Promise.reject('inserted zero refer records');
         return Promise.resolve(true);
     }
 
@@ -43,7 +43,7 @@ export default class Refers implements IRefers {
         }
 
         // reject if nothing was found
-        if(select_res.length == 0) return Promise.reject('fetched zero records');
+        if(select_res.length == 0) return Promise.reject('fetched zero refer records');
         const ref = select_res[0];
 
         // reject if referral is for some reason undefined
@@ -51,8 +51,8 @@ export default class Refers implements IRefers {
         return ref;
     }
 
-    public async useRefer(link: string): Promise<boolean> {
-        // get referral to check for uses
+    public async isValid(link: string): Promise<boolean> {
+        // get referral
         let ref;
         try {
             ref = await this.getRefer(link);
@@ -60,8 +60,35 @@ export default class Refers implements IRefers {
             return Promise.reject(e);
         }
         
+        // check if refer is valid
+        let valid;
+        try {
+            valid = this.isValidFromData(ref);
+        } catch(e) {
+            return Promise.reject(e);
+        }
+
+        if(!valid) return Promise.resolve(false);
+        return Promise.resolve(true);
+    }
+
+    private isValidFromData(data: ReferProps): boolean {
         // reject if use amount if >= the max amount allowed
-        if(ref.uses >= ref.max_uses) return Promise.reject('ref reached max uses');
+        if(data.uses >= data.max_uses) return false;
+        return true;
+    }
+
+    public async useRefer(link: string): Promise<boolean> {
+        // check if referral is valid
+        let ref;
+        try {
+            ref = await this.getRefer(link);
+        } catch(e) {
+            return Promise.reject(e);
+        }
+
+        let valid = this.isValidFromData(ref);
+        if(!valid) return Promise.reject('invalid ref');
 
         // attempt update uses to +1
         let update_res;
@@ -76,7 +103,7 @@ export default class Refers implements IRefers {
         }
 
         // rejects if nothing updates or throws error
-        if(update_res.length == 0) return Promise.reject('updated zero records');
+        if(update_res.length == 0) return Promise.reject('updated zero refer records');
         return Promise.resolve(true);
     }
 
@@ -94,7 +121,7 @@ export default class Refers implements IRefers {
         }
 
         // rejects if noting updates or throws error
-        if(update_res.length == 0) return Promise.reject('updated zero records');
+        if(update_res.length == 0) return Promise.reject('updated zero refer records');
         return Promise.resolve(true);
     }
 }
