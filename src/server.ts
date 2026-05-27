@@ -8,6 +8,7 @@ import { defCreateAccount } from './routes/default/users.ts';
 import { adminCreateAccount } from './routes/admin/users.ts';
 import z from 'zod';
 import { ADMIN_ACCOUNT_CREATE_BODY_STRUCT, ACCOUNT_CREATE_BODY_STRUCT, ADMIN_SESSION, BIO_FIELD, LOGIN_NAME_FIELD, PFP_URL_FIELD, PGP_FIELD, PWD_FIELD, RANK_FIELD, REFER_FIELD, TAG_FIELD, USER_NAME_FIELD, ADMIN_ACCOUNT_CREATE_COOKIE_STRUCT } from './consts.ts';
+import { devCreateAccount } from './routes/dev/users.ts';
 
 // setup server and middleware
 const serv = express();
@@ -26,14 +27,19 @@ async function registerRoutes() {
         path: '/account/create',
         defCallbackOpts: {
             callback: defCreateAccount,
-            requiredBodyValues: ACCOUNT_CREATE_BODY_STRUCT
-        },
-        adminCallbackOpts: {
-            callback: adminCreateAccount,
-            requiredBodyValues: ADMIN_ACCOUNT_CREATE_BODY_STRUCT,
-            requiredCookies: ADMIN_ACCOUNT_CREATE_COOKIE_STRUCT
+            requiredBodyValues: ACCOUNT_CREATE_BODY_STRUCT,
         }
     });
+
+    // non-production routes
+    await rr.post({
+        path: '/dev/account/create',
+        defCallbackOpts: {
+            callback: devCreateAccount,
+            requiredBodyValues: ADMIN_ACCOUNT_CREATE_BODY_STRUCT
+        },
+        dev: true
+    })
 }
 
 registerRoutes();

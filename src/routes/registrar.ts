@@ -2,6 +2,7 @@ import express from 'express';
 import { generateResponse } from '../util.ts';
 import Database from '../db/database.ts';
 import z from 'zod';
+import conf from '../config.ts';
 
 export interface RouteCallbackProps {
     req: express.Request,
@@ -16,13 +17,15 @@ export interface RouteCallback {
 interface RegistrationProps {
     path: string,
     type: RequestType,
-    callbackOpts: RouteCallbackOptions
+    callbackOpts: RouteCallbackOptions,
+    dev?: boolean
 }
 
 interface RegistrationSetTypeProps {
     path: string,
-    defCallbackOpts?: RouteCallbackOptions
-    adminCallbackOpts?: RouteCallbackOptions
+    defCallbackOpts?: RouteCallbackOptions,
+    adminCallbackOpts?: RouteCallbackOptions,
+    dev?: boolean
 }
 
 interface RouteCallbackOptions {
@@ -57,14 +60,17 @@ class RouteRegistrar {
         return this.registeredPaths.length;
     }
 
-    private async defaultHandler(req: express.Request, res: express.Response, opts: RouteCallbackOptions, db: Database) {
+    private async defaultHandler(req: express.Request, res: express.Response, opts: RouteCallbackOptions, db: Database, dev?: boolean) {
+        // returns 404 if its a dev route and app is in production
+        if(dev && conf.prod) return res.sendStatus(404);
+
         if(opts.requiredBodyValues) {
             // checks if body exists duhh
             if(!req.body) return res.status(400).send(generateResponse(false, 'no body brah'));
 
             // body check dat
             let bc = await opts.requiredBodyValues.safeParseAsync(req.body);
-            if(!bc.success) return res.status(400).send(generateResponse(false, 'missing body value'))
+            if(!bc.success) return res.status(400).send(generateResponse(false, 'missing body value'));
         }
 
         if(opts.requiredCookies) {
@@ -80,23 +86,23 @@ class RouteRegistrar {
         opts.callback({ req, res, db });
     }
 
-    private async registerRoute({ path, type, callbackOpts }: RegistrationProps): Promise<boolean> {
+    private async registerRoute({ path, type, callbackOpts, dev }: RegistrationProps): Promise<boolean> {
         // check if path is already registered, return false if so
         if(this.registeredPaths.includes(path)) return Promise.reject(`path ${path} already registered`);
 
         // auughh switch case case case
         switch(type) {
             case RequestType.GET: 
-                this.serv.router.get(path, async (req, res) => await this.defaultHandler(req, res, callbackOpts, this.db));
+                this.serv.router.get(path, async (req, res) => await this.defaultHandler(req, res, callbackOpts, this.db, dev));
                 break;
             case RequestType.POST: 
-                this.serv.router.post(path, async (req, res) => await this.defaultHandler(req, res, callbackOpts, this.db));
+                this.serv.router.post(path, async (req, res) => await this.defaultHandler(req, res, callbackOpts, this.db, dev));
                 break;
             case RequestType.PATCH: 
-                this.serv.router.patch(path, async (req, res) => await this.defaultHandler(req, res, callbackOpts, this.db));
+                this.serv.router.patch(path, async (req, res) => await this.defaultHandler(req, res, callbackOpts, this.db, dev));
                 break;
             case RequestType.OPTIONS: 
-                this.serv.router.options(path, async (req, res) => await this.defaultHandler(req, res, callbackOpts, this.db));
+                this.serv.router.options(path, async (req, res) => await this.defaultHandler(req, res, callbackOpts, this.db, dev));
                 break;
             default: return Promise.reject(`unknown request type ${type}`);
         }
@@ -105,13 +111,13 @@ class RouteRegistrar {
         return true;
     }
 
-    public async register(path: string, type: RequestType, defCallbackOpts?: RouteCallbackOptions, adminCallbackOpts?: RouteCallbackOptions): Promise<boolean> {
+    public async register(path: string, type: RequestType, defCallbackOpts?: RouteCallbackOptions, adminCallbackOpts?: RouteCallbackOptions, dev: boolean = false): Promise<boolean> {
         // setup results (admin is true cuz it may not exec)
         let def_res = true;
         let admin_res = true;
         try {
-            if(defCallbackOpts) def_res = await this.registerRoute({ path, type, callbackOpts: defCallbackOpts });
-            if(adminCallbackOpts) admin_res = await this.registerAdmin({ path, type, callbackOpts: adminCallbackOpts });
+            if(defCallbackOpts) def_res = await this.registerRoute({ path, type, callbackOpts: defCallbackOpts, dev });
+            if(adminCallbackOpts) admin_res = await this.registerAdmin({ path, type, callbackOpts: adminCallbackOpts, dev });
         } catch(e) {
             return Promise.reject(e);
         }
@@ -120,29 +126,29 @@ class RouteRegistrar {
         return (def_res && admin_res) && (!(!defCallbackOpts) && !(!adminCallbackOpts));
     }
 
-    public async get({ path, defCallbackOpts, adminCallbackOpts }: RegistrationSetTypeProps): Promise<boolean> {
+    public async get({ path, defCallbackOpts, adminCallbackOpts, dev }: RegistrationSetTypeProps): Promise<boolean> {
         // simplified method to register GET route
-        return await this.register(path, RequestType.GET, defCallbackOpts, adminCallbackOpts);
+        return await this.register(path, RequestType.GET, defCallbackOpts, adminCallbackOpts, dev);
     }
 
-    public async post({ path, defCallbackOpts, adminCallbackOpts}: RegistrationSetTypeProps): Promise<boolean> {
+    public async post({ path, defCallbackOpts, adminCallbackOpts, dev }: RegistrationSetTypeProps): Promise<boolean> {
         // simplified method to register POST route
-        return await this.register(path, RequestType.POST, defCallbackOpts, adminCallbackOpts);
+        return await this.register(path, RequestType.POST, defCallbackOpts, adminCallbackOpts, dev);
     }
 
-    public async registerDefault({ path, type, callbackOpts }: RegistrationProps): Promise<boolean> {
+    public async registerDefault({ path, type, callbackOpts, dev }: RegistrationProps): Promise<boolean> {
         // error if path starts with /admin
         if(path.startsWith('/admin')) {
             return Promise.reject(`path "${path}" cannot start with /admin`);
         }
 
         // register route
-        return await this.registerRoute({ path, type, callbackOpts });
+        return await this.registerRoute({ path, type, callbackOpts, dev });
     }
 
-    public async registerAdmin({ path, type, callbackOpts }: RegistrationProps) {
+    public async registerAdmin({ path, type, callbackOpts, dev }: RegistrationProps) {
         // just register path with /admin in the front
-        return await this.registerRoute({ path: `/admin${path}`, type, callbackOpts });
+        return await this.registerRoute({ path: `/admin${path}`, type, callbackOpts, dev });
     }
 
     public getServer(): express.Application {

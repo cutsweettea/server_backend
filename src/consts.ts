@@ -27,13 +27,14 @@ export const USER_NAME_FIELD = MIN_1_LEN.max(USER_NAME_MAX_LEN);
 export const PWD_FIELD = MIN_1_LEN.max(PWD_MAX_LEN);
 export const REFER_FIELD = MIN_1_LEN.max(REFER_MAX_LEN);
 export const TAG_FIELD = MIN_1_LEN.max(TAG_MAX_LEN);
-export const PGP_FIELD = z.string().max(PGP_MAX_LEN).nullable();
+export const PGP_FIELD = z.string().max(PGP_MAX_LEN).optional();
 export const RANK_FIELD = z.int().min(0).max(2);
-export const PFP_URL_FIELD = z.string().max(PFP_URL_MAX_LEN).nullable();
-export const BIO_FIELD = z.string().max(BIO_MAX_LEN).nullable();
+export const PFP_URL_FIELD = z.string().max(PFP_URL_MAX_LEN).optional();
+export const BIO_FIELD = z.string().max(BIO_MAX_LEN).optional();
 
-// zod session
+// zod sessions / secrets
 export const ADMIN_SESSION = z.string().length(ADMIN_SESSION_LEN);
+export const DEV_SECRET = MIN_1_LEN.max(512);
 
 // zod request structures / props
 export const ACCOUNT_CREATE_BODY_STRUCT = z.object({
