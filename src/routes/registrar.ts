@@ -1,6 +1,7 @@
 import express from 'express';
 import { generateResponse } from '../util.ts';
 import Database from '../db/database.ts';
+import z from 'zod';
 
 export interface RouteCallbackProps {
     req: express.Request,
@@ -26,8 +27,8 @@ interface RegistrationSetTypeProps {
 
 interface RouteCallbackOptions {
     callback: RouteCallback,
-    requiredBodyValues?: string[],
-    requiredCookies?: string[]
+    requiredBodyValues?: z.ZodObject,
+    requiredCookies?: z.ZodObject
 }
 
 // what the fuck is this
@@ -56,25 +57,23 @@ class RouteRegistrar {
         return this.registeredPaths.length;
     }
 
-    private defaultHandler(req: express.Request, res: express.Response, opts: RouteCallbackOptions, db: Database) {
+    private async defaultHandler(req: express.Request, res: express.Response, opts: RouteCallbackOptions, db: Database) {
         if(opts.requiredBodyValues) {
-            // checks for required body values if specified
+            // checks if body exists duhh
             if(!req.body) return res.status(400).send(generateResponse(false, 'no body brah'));
-            for(let i = 0; i < opts.requiredBodyValues.length; i++) {
-                // check for each value to see if in body, returning 400 status if not
-                let v = opts.requiredBodyValues[i];
-                if(!v) continue;
-                if(!(v in req.body)) return res.status(400).send(generateResponse(false, 'missing body value'));
-            }
+
+            // body check dat
+            let bc = await opts.requiredBodyValues.safeParseAsync(req.body);
+            if(!bc.success) return res.status(400).send(generateResponse(false, 'missing body value'))
         }
 
         if(opts.requiredCookies) {
-            for(let i = 0; i < opts.requiredCookies.length; i++) {
-                // check for each value to see if is cookie
-                let v = opts.requiredCookies[i];
-                if(!v) continue;
-                if(!(v in req.signedCookies)) return res.status(400).send(generateResponse(false, 'missing cookie'));
-            }
+            // only check for signed cookies
+            if(!req.signedCookies) return res.status(400).send(generateResponse(false, 'no cookies'));
+
+            // body check yay
+            let bc = await opts.requiredCookies.safeParseAsync(req.signedCookies);
+            if(!bc.success) return res.status(400).send(generateResponse(false, 'missing cookie value'));
         }
 
         // callback if everything succeeds
@@ -88,16 +87,16 @@ class RouteRegistrar {
         // auughh switch case case case
         switch(type) {
             case RequestType.GET: 
-                this.serv.router.get(path, (req, res) => this.defaultHandler(req, res, callbackOpts, this.db));
+                this.serv.router.get(path, async (req, res) => await this.defaultHandler(req, res, callbackOpts, this.db));
                 break;
             case RequestType.POST: 
-                this.serv.router.post(path, (req, res) => this.defaultHandler(req, res, callbackOpts, this.db));
+                this.serv.router.post(path, async (req, res) => await this.defaultHandler(req, res, callbackOpts, this.db));
                 break;
             case RequestType.PATCH: 
-                this.serv.router.patch(path, (req, res) => this.defaultHandler(req, res, callbackOpts, this.db));
+                this.serv.router.patch(path, async (req, res) => await this.defaultHandler(req, res, callbackOpts, this.db));
                 break;
             case RequestType.OPTIONS: 
-                this.serv.router.options(path, (req, res) => this.defaultHandler(req, res, callbackOpts, this.db));
+                this.serv.router.options(path, async (req, res) => await this.defaultHandler(req, res, callbackOpts, this.db));
                 break;
             default: return Promise.reject(`unknown request type ${type}`);
         }
