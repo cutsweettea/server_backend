@@ -1,5 +1,5 @@
 import express from 'express';
-import { generateResponse } from '../util.ts';
+import { defaultHash, defaultVerify, generateResponse } from '../util.ts';
 import Database from '../db/database.ts';
 import z from 'zod';
 import conf from '../config.ts';
@@ -63,6 +63,25 @@ class RouteRegistrar {
     private async defaultHandler(req: express.Request, res: express.Response, opts: RouteCallbackOptions, db: Database, dev?: boolean) {
         // returns 404 if its a dev route and app is in production
         if(dev && conf.prod) return res.sendStatus(404);
+
+        // check if route is dev and not currently in production
+        if(dev && !conf.prod) {
+            // return 400 if no body then if no dev secret in body
+            if(!req.body) return res.status(400).send(generateResponse(false, 'i need dat body'));
+            if(!('dev_secret' in req.body)) return res.status(400).send(generateResponse(false, 'you know what i need'));
+
+            // gets dev secret from body and checks it against hash in .env
+            const sec = req.body.dev_secret;
+            let verified;
+            try {
+                verified = await defaultVerify(conf.devSecretHash, sec);
+            } catch(e) {
+                console.log(e);
+                return res.status(400).send(generateResponse(false, 'nah'));
+            }
+
+            if(!verified) return res.status(400).send(generateResponse(false, 'incorrect'));
+        }
 
         if(opts.requiredBodyValues) {
             // checks if body exists duhh

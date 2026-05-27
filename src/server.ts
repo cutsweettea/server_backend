@@ -13,7 +13,7 @@ import { devCreateAccount } from './routes/dev/users.ts';
 // setup server and middleware
 const serv = express();
 serv.use(express.json({ limit: '25kb' }));
-serv.use(cookieParser(process.env.CKSEC));
+serv.use(cookieParser(conf.cookieSecret));
 
 // setup db
 const db = new Database();
@@ -22,6 +22,8 @@ const db = new Database();
 const rr = new RouteRegistrar(serv, db);
 
 async function registerRoutes() {
+    // for-production routes
+
     // account creation
     await rr.post({
         path: '/account/create',
