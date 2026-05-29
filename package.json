@@ -2,7 +2,6 @@
   "name": "backend",
   "version": "1.0.0",
   "description": "serva backend",
-  "homepage": "https://github.com/cutsweettea/server_backend#readme",
   "bugs": {
     "url": "https://github.com/cutsweettea/server_backend/issues"
   },
