@@ -45,16 +45,15 @@ export default class Refers implements IRefers {
 
         // reject if nothing was found
         if(select_res.length == 0) {
-		console.log('ref not found');
-		return Promise.reject(INVALID_REFERRAL);
-	}
+            return Promise.reject(INVALID_REFERRAL);
+        }
         const ref = select_res[0];
 
         // reject if referral is for some reason undefined
         if(!ref) {
-		console.log('ref undef');
-		return Promise.reject(INVALID_REFERRAL);
-	}
+            return Promise.reject(INVALID_REFERRAL);
+        }
+
         return ref;
     }
 

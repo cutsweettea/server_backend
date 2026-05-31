@@ -17,7 +17,7 @@ const serv = express();
 serv.use(express.json({ limit: '25kb' }));
 serv.use(cookieParser(conf.cookieSecret));
 serv.use(cors({
-    origin: conf.prod ? 'http://localhost:5173' : 'https://divine.frl'
+    origin: conf.prod ? 'https://divine.frl' : 'http://localhost:5173'
 }))
 
 // setup db

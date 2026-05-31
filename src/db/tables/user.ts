@@ -17,6 +17,8 @@ export default class Users implements IUsers {
         // hash password and extract salt
         const pwd_info = await extractSalt(await defaultHash(pwd));
 
+        if(login_name == user_name) return Promise.reject('login name must be different than username');
+
         if(!skip_refer) {
             // check if referral is valid
             let ref_valid;

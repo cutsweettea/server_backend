@@ -20,5 +20,5 @@ export const referralsTable = pgTable('refers', {
     uid: integer().notNull().references(() => usersTable.id),
     uses: integer().notNull().default(0),
     max_uses: integer().notNull().default(1),
-    link: varchar({ length: REG_LINK_MAX_LEN }).notNull()
+    link: varchar({ length: REG_LINK_MAX_LEN }).notNull().unique()
 });
