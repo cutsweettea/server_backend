@@ -4,6 +4,7 @@ import Database from "../database.ts";
 import { defaultHash, extractSalt, genRandom } from "../../util.ts";
 import { usersTable } from "../schema.ts";
 import { id } from "zod/locales";
+import { ACCOUNT_CREATE_FAIL } from "../../consts.ts";
 
 export default class Users implements IUsers {
     private db: Database;
@@ -25,17 +26,17 @@ export default class Users implements IUsers {
                 return Promise.reject(e);
             }
 
-            if(!ref_valid) return Promise.reject('invalid ref');
+            if(!ref_valid) return Promise.reject('invalid referral');
 
             // if refer is valid, increase use by 1
             let increase_res;
             try {
                 increase_res = await this.db.getRefers().useRefer(refer);
             } catch(e) {
-                return Promise.reject(e);
+                return Promise.reject(ACCOUNT_CREATE_FAIL);
             }
 
-            if(!increase_res) return Promise.reject('failed increasing ref count');
+            if(!increase_res) return Promise.reject(ACCOUNT_CREATE_FAIL);
         }
 
         // generate random tag if not specified
@@ -61,11 +62,11 @@ export default class Users implements IUsers {
             }).returning();
         } catch(e) {
             console.log(e);
-            return Promise.reject('failed creating account');
+            return Promise.reject(ACCOUNT_CREATE_FAIL);
         }
 
         // reject if nothing inserted or throws error
-        if(insert_res.length == 0) return Promise.reject('created zero records');
+        if(insert_res.length == 0) return Promise.reject(ACCOUNT_CREATE_FAIL);
         return Promise.resolve(pwd_info.salt);
     }
 }

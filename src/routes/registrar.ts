@@ -89,7 +89,7 @@ class RouteRegistrar {
 
             // body check dat
             let bc = await opts.requiredBodyValues.safeParseAsync(req.body);
-            if(!bc.success) return res.status(400).send(generateResponse(false, 'missing body value'));
+            if(!bc.success) return res.status(400).send(generateResponse(false, JSON.parse(bc.error.message)[0].message));
         }
 
         if(opts.requiredCookies) {
@@ -98,7 +98,7 @@ class RouteRegistrar {
 
             // body check yay
             let bc = await opts.requiredCookies.safeParseAsync(req.signedCookies);
-            if(!bc.success) return res.status(400).send(generateResponse(false, 'missing cookie value'));
+            if(!bc.success) return res.status(400).send(generateResponse(false, JSON.parse(bc.error.message)[0].message));
         }
 
         // callback if everything succeeds

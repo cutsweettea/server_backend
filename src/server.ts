@@ -10,11 +10,15 @@ import z from 'zod';
 import { ADMIN_ACCOUNT_CREATE_BODY_STRUCT, ACCOUNT_CREATE_BODY_STRUCT, ADMIN_SESSION, BIO_FIELD, LOGIN_NAME_FIELD, PFP_URL_FIELD, PGP_FIELD, PWD_FIELD, RANK_FIELD, REFER_FIELD, TAG_FIELD, USER_NAME_FIELD, ADMIN_REFER_CREATE_BODY_STRUCT, DEV_REFER_USE_BODY_STRUCT, DEV_REFER_SET_BODY_STRUCT } from './consts.ts';
 import { devCreateAccount } from './routes/dev/users.ts';
 import { devCreateReferral, devSetReferralUses, devUseReferral } from './routes/dev/refers.ts';
+import cors from 'cors';
 
 // setup server and middleware
 const serv = express();
 serv.use(express.json({ limit: '25kb' }));
 serv.use(cookieParser(conf.cookieSecret));
+serv.use(cors({
+    origin: 'http://localhost:5173'
+}))
 
 // setup db
 const db = new Database();

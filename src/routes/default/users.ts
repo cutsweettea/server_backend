@@ -12,8 +12,7 @@ export async function defCreateAccount({ req, res, db }: RouteCallbackProps) {
     try {
         salt = await db.getUsers().createUser(ln, usn, pwd, refer);
     } catch(e) {
-        console.error(e);
-        return res.status(400).send(generateResponse(false, 'didnt work rip'));
+        return res.status(400).send(generateResponse(false, e));
     }
 
     return res.status(200).send(generateResponse(true, salt));

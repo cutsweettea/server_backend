@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import Database from "../database.ts";
 import type { IRefers, ReferProps } from "../interfaces.ts";
 import { referralsTable } from "../schema.ts";
+import { INVALID_REFERRAL } from "../../consts.ts";
 
 export default class Refers implements IRefers {
     private db: Database;
@@ -39,15 +40,15 @@ export default class Refers implements IRefers {
             .limit(1);
         } catch(e) {
             console.error(e);
-            return Promise.reject('failed getting referral');
+            return Promise.reject(INVALID_REFERRAL);
         }
 
         // reject if nothing was found
-        if(select_res.length == 0) return Promise.reject('fetched zero refer records');
+        if(select_res.length == 0) return Promise.reject(INVALID_REFERRAL);
         const ref = select_res[0];
 
         // reject if referral is for some reason undefined
-        if(!ref) return Promise.reject('null record');
+        if(!ref) return Promise.reject(INVALID_REFERRAL);
         return ref;
     }
 
