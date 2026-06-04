@@ -1,4 +1,5 @@
 import * as argon2 from 'argon2';
+import conf from './config.ts';
 
 export function generateResponse(success: boolean, data: any) {
     return JSON.stringify({
@@ -40,6 +41,35 @@ export async function extractSalt(hash: string): Promise<SaltExtractResult> {
 
 export const defaultVerify = async (hash: string, text: string): Promise<boolean> => {
     return await argon2.verify(hash, text);
+}
+
+export const btoaNoPadding = (text: string) => {
+    return btoa(text).replace(/=/g, '');
+};
+
+export const atobNoPadding = (text: string) => {
+    const padLength = (4 - (text.length % 4)) % 4;
+    const paddedStr = text.padEnd(text.length + padLength, '=');
+    return atob(paddedStr);
+};
+
+const DEFAULT_COOKIE_EXPIRY = new Date(new Date().getTime()+8*60*60*1000);
+export function generateCookieOpts(path?: string, expiry?: Date, domain?: string, httpOnly?: boolean, secure?: boolean, sameSite?: CookieSameSite) {
+    return conf.prod ? {
+        path: !path ? '/' : path,
+        domain: !domain ? '.divine.frl' : domain,
+        expires: !expiry ? DEFAULT_COOKIE_EXPIRY : expiry,
+        httpOnly: !httpOnly ? true : httpOnly,
+        secure: !secure ? true : secure,
+        sameSite: !sameSite ? 'lax' : sameSite
+    } : {
+        path: !path ? '/' : path,
+        domain: !domain ? '.localhost' : domain,
+        expires: !expiry ? DEFAULT_COOKIE_EXPIRY : expiry,
+        httpOnly: !httpOnly ? true : httpOnly,
+        secure: !secure ? false : secure,
+        sameSite: !sameSite ? 'lax' : sameSite
+    };
 }
 
 export function genRandom(length: number): string {

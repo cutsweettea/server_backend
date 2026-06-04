@@ -18,14 +18,16 @@ interface RegistrationProps {
     path: string,
     type: RequestType,
     callbackOpts: RouteCallbackOptions,
-    dev?: boolean
+    dev?: boolean,
+    genericResponse?: string
 }
 
 interface RegistrationSetTypeProps {
     path: string,
     defCallbackOpts?: RouteCallbackOptions,
     adminCallbackOpts?: RouteCallbackOptions,
-    dev?: boolean
+    dev?: boolean,
+    genericResponse?: string
 }
 
 interface RouteCallbackOptions {
@@ -60,15 +62,16 @@ class RouteRegistrar {
         return this.registeredPaths.length;
     }
 
-    private async defaultHandler(req: express.Request, res: express.Response, opts: RouteCallbackOptions, db: Database, dev?: boolean) {
+    private async defaultHandler(req: express.Request, res: express.Response, opts: RouteCallbackOptions, db: Database, dev?: boolean, genericResponse?: string) {
+        console.debug(`default handling ${req.path}`);
         // returns 404 if its a dev route and app is in production
         if(dev && conf.prod) return res.sendStatus(404);
 
         // check if route is dev and not currently in production
         if(dev && !conf.prod) {
             // return 400 if no body then if no dev secret in body
-            if(!req.body) return res.status(400).send(generateResponse(false, 'i need dat body'));
-            if(!('dev_secret' in req.body)) return res.status(400).send(generateResponse(false, 'you know what i need'));
+            if(!req.body) return res.status(400).send(generateResponse(false, !genericResponse ? 'i need dat body' : genericResponse));
+            if(!('dev_secret' in req.body)) return res.status(400).send(generateResponse(false, !genericResponse ? 'you know what i need' : genericResponse));
 
             // gets dev secret from body and checks it against hash in .env
             const sec = req.body.dev_secret;
@@ -77,51 +80,51 @@ class RouteRegistrar {
                 verified = await defaultVerify(conf.devSecretHash, sec);
             } catch(e) {
                 console.log(e);
-                return res.status(400).send(generateResponse(false, 'nah'));
+                return res.status(400).send(generateResponse(false, !genericResponse ? 'nah' : genericResponse));
             }
 
-            if(!verified) return res.status(400).send(generateResponse(false, 'incorrect'));
+            if(!verified) return res.status(400).send(generateResponse(false, !genericResponse ? 'incorrect' : genericResponse));
         }
 
         if(opts.requiredBodyValues) {
             // checks if body exists duhh
-            if(!req.body) return res.status(400).send(generateResponse(false, 'no body brah'));
+            if(!req.body) return res.status(400).send(generateResponse(false, !genericResponse ? 'no body brah' : genericResponse));
 
             // body check dat
             let bc = await opts.requiredBodyValues.safeParseAsync(req.body);
-            if(!bc.success) return res.status(400).send(generateResponse(false, JSON.parse(bc.error.message)[0].message));
+            if(!bc.success) return res.status(400).send(generateResponse(false, !genericResponse ? JSON.parse(bc.error.message)[0].message : genericResponse));
         }
 
         if(opts.requiredCookies) {
             // only check for signed cookies
-            if(!req.signedCookies) return res.status(400).send(generateResponse(false, 'no cookies'));
+            if(!req.signedCookies) return res.status(400).send(generateResponse(false, !genericResponse ? 'no cookies' : genericResponse));
 
             // body check yay
             let bc = await opts.requiredCookies.safeParseAsync(req.signedCookies);
-            if(!bc.success) return res.status(400).send(generateResponse(false, JSON.parse(bc.error.message)[0].message));
+            if(!bc.success) return res.status(400).send(generateResponse(false, !genericResponse ? JSON.parse(bc.error.message)[0].message : genericResponse));
         }
 
         // callback if everything succeeds
         opts.callback({ req, res, db });
     }
 
-    private async registerRoute({ path, type, callbackOpts, dev }: RegistrationProps): Promise<boolean> {
+    private async registerRoute({ path, type, callbackOpts, dev, genericResponse }: RegistrationProps): Promise<boolean> {
         // check if path is already registered, return false if so
         if(this.registeredPaths.includes(path)) return Promise.reject(`path ${path} already registered`);
 
         // auughh switch case case case
         switch(type) {
             case RequestType.GET: 
-                this.serv.router.get(path, async (req, res) => await this.defaultHandler(req, res, callbackOpts, this.db, dev));
+                this.serv.router.get(path, async (req, res) => await this.defaultHandler(req, res, callbackOpts, this.db, dev, genericResponse));
                 break;
             case RequestType.POST: 
-                this.serv.router.post(path, async (req, res) => await this.defaultHandler(req, res, callbackOpts, this.db, dev));
+                this.serv.router.post(path, async (req, res) => await this.defaultHandler(req, res, callbackOpts, this.db, dev, genericResponse));
                 break;
             case RequestType.PATCH: 
-                this.serv.router.patch(path, async (req, res) => await this.defaultHandler(req, res, callbackOpts, this.db, dev));
+                this.serv.router.patch(path, async (req, res) => await this.defaultHandler(req, res, callbackOpts, this.db, dev, genericResponse));
                 break;
             case RequestType.OPTIONS: 
-                this.serv.router.options(path, async (req, res) => await this.defaultHandler(req, res, callbackOpts, this.db, dev));
+                this.serv.router.options(path, async (req, res) => await this.defaultHandler(req, res, callbackOpts, this.db, dev, genericResponse));
                 break;
             default: return Promise.reject(`unknown request type ${type}`);
         }
@@ -130,13 +133,13 @@ class RouteRegistrar {
         return true;
     }
 
-    public async register(path: string, type: RequestType, defCallbackOpts?: RouteCallbackOptions, adminCallbackOpts?: RouteCallbackOptions, dev: boolean = false): Promise<boolean> {
+    public async register(path: string, type: RequestType, defCallbackOpts?: RouteCallbackOptions, adminCallbackOpts?: RouteCallbackOptions, dev: boolean = false, genericResponse?: string): Promise<boolean> {
         // setup results (admin is true cuz it may not exec)
         let def_res = true;
         let admin_res = true;
         try {
-            if(defCallbackOpts) def_res = await this.registerRoute({ path, type, callbackOpts: defCallbackOpts, dev });
-            if(adminCallbackOpts) admin_res = await this.registerAdmin({ path, type, callbackOpts: adminCallbackOpts, dev });
+            if(defCallbackOpts) def_res = await this.registerRoute({ path, type, callbackOpts: defCallbackOpts, dev, genericResponse });
+            if(adminCallbackOpts) admin_res = await this.registerAdmin({ path, type, callbackOpts: adminCallbackOpts, dev, genericResponse });
         } catch(e) {
             return Promise.reject(e);
         }
@@ -145,14 +148,14 @@ class RouteRegistrar {
         return (def_res && admin_res) && (!(!defCallbackOpts) && !(!adminCallbackOpts));
     }
 
-    public async get({ path, defCallbackOpts, adminCallbackOpts, dev }: RegistrationSetTypeProps): Promise<boolean> {
+    public async get({ path, defCallbackOpts, adminCallbackOpts, dev, genericResponse }: RegistrationSetTypeProps): Promise<boolean> {
         // simplified method to register GET route
-        return await this.register(path, RequestType.GET, defCallbackOpts, adminCallbackOpts, dev);
+        return await this.register(path, RequestType.GET, defCallbackOpts, adminCallbackOpts, dev, genericResponse);
     }
 
-    public async post({ path, defCallbackOpts, adminCallbackOpts, dev }: RegistrationSetTypeProps): Promise<boolean> {
+    public async post({ path, defCallbackOpts, adminCallbackOpts, dev, genericResponse }: RegistrationSetTypeProps): Promise<boolean> {
         // simplified method to register POST route
-        return await this.register(path, RequestType.POST, defCallbackOpts, adminCallbackOpts, dev);
+        return await this.register(path, RequestType.POST, defCallbackOpts, adminCallbackOpts, dev, genericResponse);
     }
 
     public async registerDefault({ path, type, callbackOpts, dev }: RegistrationProps): Promise<boolean> {

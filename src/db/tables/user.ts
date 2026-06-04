@@ -1,10 +1,11 @@
 import { NodePgDatabase } from "drizzle-orm/node-postgres";
-import type { IUsers } from "../interfaces.ts";
+import type { IUsers, UserProps } from "../interfaces.ts";
 import Database from "../database.ts";
 import { defaultHash, extractSalt, genRandom } from "../../util.ts";
 import { usersTable } from "../schema.ts";
 import { id } from "zod/locales";
-import { ACCOUNT_CREATE_FAIL } from "../../consts.ts";
+import { ACCOUNT_CREATE_FAIL, ACCOUNT_LOGIN_FAIL } from "../../consts.ts";
+import { eq } from "drizzle-orm";
 
 export default class Users implements IUsers {
     private db: Database;
@@ -15,7 +16,9 @@ export default class Users implements IUsers {
 
     public async createUser(login_name: string, user_name: string, pwd: string, refer: string, rank?: number, tag?: string, pgp?: string, pfp_url?: string, bio?: string, skip_refer = false): Promise<string> {
         // hash password and extract salt
-        const pwd_info = await extractSalt(await defaultHash(pwd));
+        const hash = await defaultHash(pwd);
+        console.log(`og hash: ${hash}`);
+        const pwd_info = await extractSalt(hash);
 
         if(login_name == user_name) return Promise.reject('login name must be different than username');
 
@@ -70,5 +73,22 @@ export default class Users implements IUsers {
         // reject if nothing inserted or throws error
         if(insert_res.length == 0) return Promise.reject(ACCOUNT_CREATE_FAIL);
         return Promise.resolve(pwd_info.salt);
+    }
+
+    public async getUser(ln: string): Promise<UserProps> {
+        let select_res;
+        try {
+            select_res = await this.db.getDb().select()
+            .from(usersTable)
+            .where(eq(usersTable.login_name, ln));
+        } catch(e) {
+            console.error(e);
+            return Promise.reject(ACCOUNT_LOGIN_FAIL);
+        }
+
+        if(select_res.length == 0) return Promise.reject(ACCOUNT_LOGIN_FAIL);
+        const user = select_res[0];
+        if(!user) return Promise.reject(ACCOUNT_LOGIN_FAIL);
+        return Promise.resolve(user);
     }
 }

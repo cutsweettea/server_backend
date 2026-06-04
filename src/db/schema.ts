@@ -1,5 +1,6 @@
 import { pgTable, integer, varchar, text, timestamp } from "drizzle-orm/pg-core";
-import { BIO_MAX_LEN, LOGIN_NAME_MAX_LEN, PFP_URL_MAX_LEN, PGP_MAX_LEN, PWD_HASH_MAX_LEN, REFER_MAX_LEN, REG_LINK_MAX_LEN, TAG_MAX_LEN, USER_NAME_MAX_LEN } from "../consts.ts";
+import { BIO_MAX_LEN, LOGIN_NAME_MAX_LEN, PFP_URL_MAX_LEN, PGP_MAX_LEN, PWD_HASH_MAX_LEN, REFER_MAX_LEN, REG_LINK_MAX_LEN, SESSION_ID_LEN, SESSION_NAME_MAX_LEN, TAG_MAX_LEN, USER_NAME_MAX_LEN } from "../consts.ts";
+import { sql } from "drizzle-orm";
 
 export const usersTable = pgTable('users', {
     id: integer().primaryKey().generatedAlwaysAsIdentity(),
@@ -22,3 +23,10 @@ export const referralsTable = pgTable('refers', {
     max_uses: integer().notNull().default(1),
     link: varchar({ length: REG_LINK_MAX_LEN }).notNull().unique()
 });
+
+export const sessionsTable = pgTable('sessions', {
+    id: varchar({ length: SESSION_ID_LEN }).primaryKey(),
+    uid: integer().notNull().references(() => usersTable.id),
+    name: varchar({ length: SESSION_NAME_MAX_LEN }).notNull(),
+    expiry: timestamp().notNull().default(sql`CURRENT_TIMESTAMP + INTERVAL '8 HOUR'`)
+})
