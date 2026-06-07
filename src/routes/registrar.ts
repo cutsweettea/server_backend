@@ -111,6 +111,7 @@ class RouteRegistrar {
     private async registerRoute({ path, type, callbackOpts, dev, genericResponse }: RegistrationProps): Promise<boolean> {
         // check if path is already registered, return false if so
         if(this.registeredPaths.includes(path)) return Promise.reject(`path ${path} already registered`);
+        console.log(`registering path ${path} with type ${type}`);
 
         // auughh switch case case case
         switch(type) {

@@ -1,7 +1,8 @@
-import { ACCOUNT_LOGIN_FAIL } from "../../consts.ts";
+import { eq } from "drizzle-orm";
+import { ACCOUNT_LOGIN_FAIL, SESSION_NOT_FOUND } from "../../consts.ts";
 import { btoaNoPadding, defaultVerify, genRandom } from "../../util.ts";
 import Database from "../database.ts";
-import type { ISessions } from "../interfaces.ts";
+import type { ISessions, SessionProps } from "../interfaces.ts";
 import { sessionsTable } from "../schema.ts";
 
 export default class Sessions implements ISessions {
@@ -33,7 +34,7 @@ export default class Sessions implements ISessions {
     public async login(ln: string, pwd: string, salt: string): Promise<string> {
         let user;
         try {
-            user = await this.db.getUsers().getUser(ln);
+            user = await this.db.getUsers().getUserByLoginName(ln);
         } catch(e) {
             return Promise.reject(e);
         }
@@ -61,5 +62,25 @@ export default class Sessions implements ISessions {
         }
 
         return Promise.resolve(sid);
+    }
+
+    public async getSession(sid: string): Promise<SessionProps> {
+        let select_res;
+        try {
+            select_res = await this.db.getDb().select()
+            .from(sessionsTable)
+            .where(eq(sessionsTable.id, sid));
+        } catch(e) {
+            console.log(e);
+            return Promise.reject(SESSION_NOT_FOUND);
+        }
+
+        if(select_res.length == 0) return Promise.reject(SESSION_NOT_FOUND);
+        const sesh = select_res[0];
+
+        if(!sesh) return Promise.reject(SESSION_NOT_FOUND);
+
+        if(new Date() > sesh.expiry) return Promise.reject(SESSION_NOT_FOUND);
+        return sesh;
     }
 }

@@ -120,5 +120,9 @@ export const DEV_REFER_SET_BODY_STRUCT = z.object({
 
 // generic responses
 export const ACCOUNT_CREATE_FAIL = 'failed creating account';
+export const ACCOUNT_GET_FAIL = 'failed getting account';
 export const INVALID_REFERRAL = 'invalid referral';
 export const ACCOUNT_LOGIN_FAIL = 'failed to login';
+export const ACCESS_FAIL = 'fail';
+export const ACCESS_SUCCESS = 'success';
+export const SESSION_NOT_FOUND = 'invalid session';

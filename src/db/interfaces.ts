@@ -2,7 +2,7 @@
 
 export interface IUsers {
     createUser(ln: string, usn: string, pwd: string, refer: string, ...args: any): Promise<string>
-    getUser(ln: string): Promise<UserProps>
+    getUserByLoginName(ln: string): Promise<UserProps>
 }
 
 export interface IRefers {
@@ -38,4 +38,11 @@ export interface UserProps {
     refer: string,
     pfp_url: string,
     bio: string | null
+}
+
+export interface SessionProps {
+    id: string,
+    uid: number,
+    name: string,
+    expiry: Date
 }

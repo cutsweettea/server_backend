@@ -4,7 +4,7 @@ import Database from "../database.ts";
 import { defaultHash, extractSalt, genRandom } from "../../util.ts";
 import { usersTable } from "../schema.ts";
 import { id } from "zod/locales";
-import { ACCOUNT_CREATE_FAIL, ACCOUNT_LOGIN_FAIL } from "../../consts.ts";
+import { ACCOUNT_CREATE_FAIL, ACCOUNT_GET_FAIL, ACCOUNT_LOGIN_FAIL, SESSION_NOT_FOUND } from "../../consts.ts";
 import { eq } from "drizzle-orm";
 
 export default class Users implements IUsers {
@@ -75,7 +75,7 @@ export default class Users implements IUsers {
         return Promise.resolve(pwd_info.salt);
     }
 
-    public async getUser(ln: string): Promise<UserProps> {
+    public async getUserByLoginName(ln: string): Promise<UserProps> {
         let select_res;
         try {
             select_res = await this.db.getDb().select()
@@ -83,12 +83,49 @@ export default class Users implements IUsers {
             .where(eq(usersTable.login_name, ln));
         } catch(e) {
             console.error(e);
-            return Promise.reject(ACCOUNT_LOGIN_FAIL);
+            return Promise.reject(ACCOUNT_GET_FAIL);
         }
 
-        if(select_res.length == 0) return Promise.reject(ACCOUNT_LOGIN_FAIL);
+        if(select_res.length == 0) return Promise.reject(ACCOUNT_GET_FAIL);
         const user = select_res[0];
-        if(!user) return Promise.reject(ACCOUNT_LOGIN_FAIL);
+        if(!user) return Promise.reject(ACCOUNT_GET_FAIL);
         return Promise.resolve(user);
+    }
+
+    public async getUser(uid: number): Promise<UserProps> {
+        let select_res;
+        try {
+            select_res = await this.db.getDb().select()
+            .from(usersTable)
+            .where(eq(usersTable.id, uid));
+        } catch(e) {
+            console.error(e);
+            return Promise.reject(ACCOUNT_GET_FAIL);
+        }
+
+        if(select_res.length == 0) return Promise.reject(ACCOUNT_GET_FAIL);
+        const user = select_res[0];
+        if(!user) return Promise.reject(ACCOUNT_GET_FAIL);
+        return Promise.resolve(user);
+    }
+
+    public async getUserFromSession(sid: string): Promise<UserProps> {
+        let sesh;
+        try {
+            sesh = await this.db.getSessions().getSession(sid);
+        } catch(e) {
+            console.error(e);
+            return Promise.reject(SESSION_NOT_FOUND);
+        }
+
+        let user;
+        try {
+            user = await this.getUser(sesh.uid);
+        } catch(e) {
+            console.error(e);
+            return Promise.reject(ACCOUNT_GET_FAIL);
+        }
+
+        return user;
     }
 }

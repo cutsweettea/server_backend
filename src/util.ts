@@ -54,21 +54,23 @@ export const atobNoPadding = (text: string) => {
 };
 
 const DEFAULT_COOKIE_EXPIRY = new Date(new Date().getTime()+8*60*60*1000);
-export function generateCookieOpts(path?: string, expiry?: Date, domain?: string, httpOnly?: boolean, secure?: boolean, sameSite?: CookieSameSite) {
+export function generateCookieOpts(path?: string, expiry?: Date, domain?: string, httpOnly?: boolean, secure?: boolean, sameSite?: CookieSameSite, signed?: boolean) {
     return conf.prod ? {
         path: !path ? '/' : path,
         domain: !domain ? '.divine.frl' : domain,
         expires: !expiry ? DEFAULT_COOKIE_EXPIRY : expiry,
         httpOnly: !httpOnly ? true : httpOnly,
         secure: !secure ? true : secure,
-        sameSite: !sameSite ? 'lax' : sameSite
+        sameSite: !sameSite ? 'lax' : sameSite,
+        signed: !signed ? true : signed
     } : {
         path: !path ? '/' : path,
         domain: !domain ? '.localhost' : domain,
         expires: !expiry ? DEFAULT_COOKIE_EXPIRY : expiry,
         httpOnly: !httpOnly ? true : httpOnly,
         secure: !secure ? false : secure,
-        sameSite: !sameSite ? 'lax' : sameSite
+        sameSite: !sameSite ? 'lax' : sameSite,
+        signed: !signed ? false : signed
     };
 }
 
@@ -83,4 +85,21 @@ export function genRandom(length: number): string {
     }
     
     return res;
+}
+
+const ranks = {
+    DEFAULT: 0,
+    OWNER: 1,
+    ADMIN: 2,
+    STREAMER: 3
+} as const;
+
+export function canAccess(rank: number, required: number): boolean {
+    switch(required) {
+        case ranks.OWNER: return rank == ranks.OWNER;
+        case ranks.ADMIN: return rank == ranks.OWNER || rank == ranks.ADMIN;
+        case ranks.STREAMER: return rank == ranks.OWNER || rank == ranks.STREAMER;
+        case ranks.DEFAULT: return true;
+        default: return false;
+    }
 }
