@@ -23,6 +23,9 @@ export const ADMIN_SESSION_ID_LEN = 64;
 export const SESSION_NAME_MAX_LEN = 32;
 export const DEV_SECRET_MAX_LEN = 512;
 
+// defaults
+export const DEFAULT_PFP_URL = 'https://cdn.divine.frl/r/user';
+
 // zod consts
 
 // zod props
