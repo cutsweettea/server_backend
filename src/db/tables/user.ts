@@ -92,6 +92,23 @@ export default class Users implements IUsers {
         return Promise.resolve(user);
     }
 
+    public async getUserByUsername(usn: string): Promise<UserProps> {
+        let select_res;
+        try {
+            select_res = await this.db.getDb().select()
+            .from(usersTable)
+            .where(eq(usersTable.user_name, usn));
+        } catch(e) {
+            console.error(e);
+            return Promise.reject(ACCOUNT_GET_FAIL);
+        }
+
+        if(select_res.length == 0) return Promise.reject(ACCOUNT_GET_FAIL);
+        const user = select_res[0];
+        if(!user) return Promise.reject(ACCOUNT_GET_FAIL);
+        return Promise.resolve(user);
+    }
+
     public async getUser(uid: number): Promise<UserProps> {
         let select_res;
         try {

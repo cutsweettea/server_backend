@@ -95,12 +95,13 @@ class RouteRegistrar {
             if(!bc.success) return res.status(400).send(generateResponse(false, !genericResponse ? JSON.parse(bc.error.message)[0].message : genericResponse));
         }
 
+        const cookies = conf.prod ? req.signedCookies : req.cookies;
         if(opts.requiredCookies) {
             // only check for signed cookies
-            if(!req.signedCookies) return res.status(400).send(generateResponse(false, !genericResponse ? 'no cookies' : genericResponse));
+            if(!cookies) return res.status(400).send(generateResponse(false, !genericResponse ? 'no cookies' : genericResponse));
 
             // body check yay
-            let bc = await opts.requiredCookies.safeParseAsync(req.signedCookies);
+            let bc = await opts.requiredCookies.safeParseAsync(cookies);
             if(!bc.success) return res.status(400).send(generateResponse(false, !genericResponse ? JSON.parse(bc.error.message)[0].message : genericResponse));
         }
 

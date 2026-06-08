@@ -1,5 +1,6 @@
 import * as argon2 from 'argon2';
 import conf from './config.ts';
+import type { FilteredUserProps, UserProps } from './db/interfaces.ts';
 
 export function generateResponse(success: boolean, data: any) {
     return JSON.stringify({
@@ -101,5 +102,18 @@ export function canAccess(rank: number, required: number): boolean {
         case ranks.STREAMER: return rank == ranks.OWNER || rank == ranks.STREAMER;
         case ranks.DEFAULT: return true;
         default: return false;
+    }
+}
+
+export function filterUserData(data: UserProps, session_user: UserProps): FilteredUserProps {
+    return {
+        bio: data.bio,
+        created: data.created,
+        owns: data.id == session_user.id,
+        pfp_url: data.pfp_url,
+        pgp: data.pgp,
+        rank: data.rank,
+        tag: data.tag,
+        user_name: data.user_name
     }
 }

@@ -91,6 +91,10 @@ export const ACCOUNT_LOGIN_BODY_STRUCT = z.object({
     salt: SALT_FIELD
 });
 
+export const ACCOUNT_GET_BODY_STRUCT = z.object({
+    user_name: USER_NAME_FIELD,
+});
+
 export const ADMIN_ACCOUNT_CREATE_BODY_STRUCT = z.object({
     login_name: LOGIN_NAME_FIELD,
     user_name: USER_NAME_FIELD,

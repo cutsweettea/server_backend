@@ -40,6 +40,17 @@ export interface UserProps {
     bio: string | null
 }
 
+export interface FilteredUserProps {
+    user_name: string,
+    tag: string,
+    pgp: string | null
+    rank: number,
+    created: Date,
+    pfp_url: string,
+    bio: string | null,
+    owns: boolean
+}
+
 export interface SessionProps {
     id: string,
     uid: number,
