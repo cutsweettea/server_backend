@@ -1,7 +1,6 @@
 import z from 'zod';
 
 // schema consts
-
 export const LOGIN_NAME_MAX_LEN = 32;
 export const USER_NAME_MAX_LEN = 32;
 export const PWD_MIN_LEN = 8;
@@ -16,12 +15,22 @@ export const REG_LINK_MAX_LEN = 16;
 export const UID_MAX = 999999;
 export const MAX_MAX_USES = 100;
 export const SALT_MAX_LEN = 16;
+export const ICON_LINK_MAX_LEN = 512;
+export const ICON_LINK_TYPE_MAX_LEN = 32;
 
 // session ident / secret constants
 export const SESSION_ID_LEN = 32;
 export const ADMIN_SESSION_ID_LEN = 64;
 export const SESSION_NAME_MAX_LEN = 32;
 export const DEV_SECRET_MAX_LEN = 512;
+
+// types
+export const ALLOWED_ICON_TYPES_LIST = [
+    'github',
+    'instagram',
+    'soundcloud'
+] as const;
+export type ALLOWED_ICON_TYPES = typeof ALLOWED_ICON_TYPES_LIST[number];
 
 // defaults
 export const DEFAULT_PFP_URL = 'https://cdn.divine.frl/r/user';
@@ -94,10 +103,6 @@ export const ACCOUNT_LOGIN_BODY_STRUCT = z.object({
     salt: SALT_FIELD
 });
 
-export const ACCOUNT_GET_BODY_STRUCT = z.object({
-    user_name: USER_NAME_FIELD,
-});
-
 export const ADMIN_ACCOUNT_CREATE_BODY_STRUCT = z.object({
     login_name: LOGIN_NAME_FIELD,
     user_name: USER_NAME_FIELD,
@@ -128,6 +133,7 @@ export const DEV_REFER_SET_BODY_STRUCT = z.object({
 // generic responses
 export const ACCOUNT_CREATE_FAIL = 'failed creating account';
 export const ACCOUNT_GET_FAIL = 'failed getting account';
+export const ACCOUNT_GET_LINKS_FAIL = 'failed getting links';
 export const INVALID_REFERRAL = 'invalid referral';
 export const ACCOUNT_LOGIN_FAIL = 'failed to login';
 export const ACCESS_FAIL = 'fail';

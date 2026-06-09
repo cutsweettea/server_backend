@@ -2,10 +2,10 @@ import { eq } from "drizzle-orm";
 import { ACCOUNT_LOGIN_FAIL, SESSION_NOT_FOUND } from "../../consts.ts";
 import { btoaNoPadding, defaultVerify, genRandom } from "../../util.ts";
 import Database from "../database.ts";
-import type { ISessions, SessionProps } from "../interfaces.ts";
+import type { SessionProps } from "../interfaces.ts";
 import { sessionsTable } from "../schema.ts";
 
-export default class Sessions implements ISessions {
+export default class Sessions {
     private db: Database;
 
     constructor(db: Database) {

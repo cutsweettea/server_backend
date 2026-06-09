@@ -1,7 +1,7 @@
 import conf from "../../config.ts";
 import { ACCOUNT_GET_FAIL } from "../../consts.ts";
-import type { FilteredUserProps, UserProps } from "../../db/interfaces.ts";
-import { filterUserData, generateResponse } from "../../util.ts";
+import type { FilteredUserLink, FilteredUserProps, FullFilteredUserProps, UserLink, UserProps } from "../../db/interfaces.ts";
+import { filterLinkData, filterUserData, generateResponse } from "../../util.ts";
 import type { RouteCallbackProps } from "../registrar.ts";
 
 export async function defCreateAccount({ req, res, db }: RouteCallbackProps) {
@@ -22,8 +22,9 @@ export async function defCreateAccount({ req, res, db }: RouteCallbackProps) {
 }
 
 export async function defGetUser({ req, res, db }: RouteCallbackProps) {
-    const usn: string = req.body.user_name!;
+    let usn: string | undefined = req.body.user_name;
     const cookies = conf.prod ? req.signedCookies : req.cookies;
+    let current_user_updated = false;
 
     let current_user: UserProps = {
         bio: null,
@@ -43,12 +44,19 @@ export async function defGetUser({ req, res, db }: RouteCallbackProps) {
         const sid = cookies['sid'];
         try {
             current_user = await db.getUsers().getUserFromSession(sid);
+            current_user_updated = true;
         } catch(e) {
             console.log(e);
         }
     }
 
     // attempt to get user
+    if(!current_user_updated && !usn) {
+        console.log('no current user and no username');
+        return res.status(400).send(generateResponse(false, ACCOUNT_GET_FAIL));
+    }
+
+    if(!usn) usn = current_user.user_name;
     let get_user: UserProps;
     try {
         get_user = await db.getUsers().getUserByUsername(usn);
@@ -57,6 +65,28 @@ export async function defGetUser({ req, res, db }: RouteCallbackProps) {
         return res.status(400).send(generateResponse(false, ACCOUNT_GET_FAIL));
     }
 
-    let user: FilteredUserProps = filterUserData(get_user, current_user);
+    const filtered_user: FilteredUserProps = filterUserData(get_user, current_user);
+
+    // attempt to get links
+    let links: UserLink[];
+    try {
+        links = await db.getUserLinks().getUserLinks(get_user.id);
+    } catch(e) {
+        console.log(e);
+        return res.status(400).send(generateResponse(false, ACCOUNT_GET_FAIL));
+    }
+
+    let filtered_links: FilteredUserLink[] = [];
+    for(let i = 0; i < links.length; i++) {
+        const link = links[i];
+        if(!link) continue;
+        filtered_links.push(filterLinkData(link))
+    }
+
+    const user: FullFilteredUserProps = {
+        ...filtered_user,
+        links: filtered_links
+    };
+
     return res.status(200).send(generateResponse(true, user));
 }

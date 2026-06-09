@@ -1,5 +1,5 @@
 import { NodePgDatabase } from "drizzle-orm/node-postgres";
-import type { IUsers, UserProps } from "../interfaces.ts";
+import type { UserProps } from "../interfaces.ts";
 import Database from "../database.ts";
 import { defaultHash, extractSalt, genRandom } from "../../util.ts";
 import { usersTable } from "../schema.ts";
@@ -7,7 +7,7 @@ import { id } from "zod/locales";
 import { ACCOUNT_CREATE_FAIL, ACCOUNT_GET_FAIL, ACCOUNT_LOGIN_FAIL, SESSION_NOT_FOUND } from "../../consts.ts";
 import { eq } from "drizzle-orm";
 
-export default class Users implements IUsers {
+export default class Users {
     private db: Database;
 
     constructor(db: Database) {

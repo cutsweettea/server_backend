@@ -1,10 +1,10 @@
 import { eq } from "drizzle-orm";
 import Database from "../database.ts";
-import type { IRefers, ReferProps } from "../interfaces.ts";
+import type { ReferProps } from "../interfaces.ts";
 import { referralsTable } from "../schema.ts";
 import { INVALID_REFERRAL } from "../../consts.ts";
 
-export default class Refers implements IRefers {
+export default class Refers {
     private db: Database;
 
     constructor(db: Database) {

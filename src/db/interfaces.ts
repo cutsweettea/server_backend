@@ -1,21 +1,4 @@
-// class interfaces
-
-export interface IUsers {
-    createUser(ln: string, usn: string, pwd: string, refer: string, ...args: any): Promise<string>
-    getUserByLoginName(ln: string): Promise<UserProps>
-}
-
-export interface IRefers {
-    createRefer(uid: number, link: string, ...args: any): Promise<boolean>
-    getRefer(link: string): Promise<ReferProps>
-    isValid(link: string): Promise<boolean>
-    useRefer(link: string): Promise<boolean>
-    setReferUses(link: string, uses: number): Promise<boolean>
-}
-
-export interface ISessions {
-    login(ln: string, pwd: string, salt: string): Promise<string>
-}
+import { type ALLOWED_ICON_TYPES } from "../consts.ts";
 
 // result interfaces
 export interface ReferProps {
@@ -51,9 +34,33 @@ export interface FilteredUserProps {
     owns: boolean
 }
 
+export interface FullFilteredUserProps {
+    user_name: string,
+    tag: string,
+    pgp: string | null
+    rank: number,
+    created: Date,
+    pfp_url: string,
+    bio: string | null,
+    owns: boolean,
+    links: FilteredUserLink[]
+}
+
 export interface SessionProps {
     id: string,
     uid: number,
     name: string,
     expiry: Date
+}
+
+export interface UserLink {
+    id: number,
+    uid: number,
+    type: ALLOWED_ICON_TYPES,
+    redir: string
+}
+
+export interface FilteredUserLink {
+    type: ALLOWED_ICON_TYPES,
+    redir: string
 }

@@ -5,12 +5,14 @@ import { sql } from "drizzle-orm";
 import Users from "./tables/user.ts";
 import Refers from "./tables/refer.ts";
 import Sessions from "./tables/session.ts";
+import UserLinks from "./tables/userlinks.ts";
 
 export default class Database {
     private db: NodePgDatabase;
     private users: Users;
     private refers: Refers;
     private sessions: Sessions;
+    private userLinks: UserLinks;
 
     constructor() {
         // connect with da drizzleanator
@@ -23,6 +25,7 @@ export default class Database {
         this.users = new Users(this);
         this.refers = new Refers(this);
         this.sessions = new Sessions(this);
+        this.userLinks = new UserLinks(this);
     }
 
     private async testDbConnection(): Promise<boolean> {
@@ -55,5 +58,10 @@ export default class Database {
     public getSessions(): Sessions {
         // get all em sessions
         return this.sessions;
+    }
+
+    public getUserLinks(): UserLinks {
+        // okay im done now
+        return this.userLinks;
     }
 }

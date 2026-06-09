@@ -1,6 +1,6 @@
 import * as argon2 from 'argon2';
 import conf from './config.ts';
-import type { FilteredUserProps, UserProps } from './db/interfaces.ts';
+import type { FilteredUserLink, FilteredUserProps, UserLink, UserProps } from './db/interfaces.ts';
 
 export function generateResponse(success: boolean, data: any) {
     return JSON.stringify({
@@ -115,5 +115,12 @@ export function filterUserData(data: UserProps, session_user: UserProps): Filter
         rank: data.rank,
         tag: data.tag,
         user_name: data.user_name
+    }
+}
+
+export function filterLinkData(data: UserLink): FilteredUserLink {
+    return {
+        type: data.type,
+        redir: data.redir
     }
 }
