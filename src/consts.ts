@@ -28,7 +28,8 @@ export const DEV_SECRET_MAX_LEN = 512;
 export const ALLOWED_ICON_TYPES_LIST = [
     'github',
     'instagram',
-    'soundcloud'
+    'soundcloud',
+    'tiktok'
 ] as const;
 export type ALLOWED_ICON_TYPES = typeof ALLOWED_ICON_TYPES_LIST[number];
 
