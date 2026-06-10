@@ -1,6 +1,6 @@
 import conf from "../../config.ts";
 import { ACCOUNT_GET_FAIL } from "../../consts.ts";
-import type { FilteredUserLink, FilteredUserProps, FullFilteredUserProps, UserLink, UserProps } from "../../db/interfaces.ts";
+import type { FilteredUserLink, FilteredUserProps, FullFilteredUserProps, UserLink, UserProps, UserSong } from "../../db/interfaces.ts";
 import { filterLinkData, filterUserData, generateResponse } from "../../util.ts";
 import type { RouteCallbackProps } from "../registrar.ts";
 
@@ -37,7 +37,8 @@ export async function defGetUser({ req, res, db }: RouteCallbackProps) {
         rank: -1,
         refer: '',
         tag: '',
-        user_name: ''
+        user_name: '',
+        songs: null
     };
 
     if(Object.keys(cookies).includes('sid')) {
@@ -83,8 +84,17 @@ export async function defGetUser({ req, res, db }: RouteCallbackProps) {
         filtered_links.push(filterLinkData(link))
     }
 
+    let songs: UserSong[];
+    try {
+        songs = await db.getUserSongs().getUserSongs(get_user.id);
+    } catch(e) {
+        console.log(e);
+        return res.status(400).send(generateResponse(false, ACCOUNT_GET_FAIL));
+    }
+
     const user: FullFilteredUserProps = {
         ...filtered_user,
+        songs,
         links: filtered_links
     };
 

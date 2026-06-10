@@ -3,6 +3,7 @@ import { defaultHash, defaultVerify, generateResponse } from '../util.ts';
 import Database from '../db/database.ts';
 import z from 'zod';
 import conf from '../config.ts';
+import cors from 'cors';
 
 export interface RouteCallbackProps {
     req: express.Request,
@@ -62,7 +63,7 @@ class RouteRegistrar {
         return this.registeredPaths.length;
     }
 
-    private async defaultHandler(req: express.Request, res: express.Response, opts: RouteCallbackOptions, db: Database, dev?: boolean, genericResponse?: string) {
+    public async defaultHandler(req: express.Request, res: express.Response, opts: RouteCallbackOptions, db: Database, dev?: boolean, genericResponse?: string) {
         console.debug(`default handling ${req.path}`);
         // returns 404 if its a dev route and app is in production
         if(dev && conf.prod) return res.sendStatus(404);
@@ -112,21 +113,41 @@ class RouteRegistrar {
     private async registerRoute({ path, type, callbackOpts, dev, genericResponse }: RegistrationProps): Promise<boolean> {
         // check if path is already registered, return false if so
         if(this.registeredPaths.includes(path)) return Promise.reject(`path ${path} already registered`);
-        console.log(`registering path ${path} with type ${type}`);
+        //console.log(`registering path ${path} with type ${type}`);
 
         // auughh switch case case case
         switch(type) {
             case RequestType.GET: 
-                this.serv.router.get(path, async (req, res) => await this.defaultHandler(req, res, callbackOpts, this.db, dev, genericResponse));
+                console.log(`registering path ${path} with type get`);
+                this.serv.get(path, cors({
+                    origin: conf.prod ? 'https://divine.frl' : 'http://localhost:5173',
+                    credentials: true,
+                    methods: ['GET', 'POST', 'OPTIONS']
+                }), async (req, res) => await this.defaultHandler(req, res, callbackOpts, this.db, dev, genericResponse));
                 break;
             case RequestType.POST: 
-                this.serv.router.post(path, async (req, res) => await this.defaultHandler(req, res, callbackOpts, this.db, dev, genericResponse));
+                console.log(`registering path ${path} with type post`);
+                this.serv.post(path, cors({
+                    origin: conf.prod ? 'https://divine.frl' : 'http://localhost:5173',
+                    credentials: true,
+                    methods: ['GET', 'POST', 'OPTIONS']
+                }), async (req, res) => await this.defaultHandler(req, res, callbackOpts, this.db, dev, genericResponse));
                 break;
             case RequestType.PATCH: 
-                this.serv.router.patch(path, async (req, res) => await this.defaultHandler(req, res, callbackOpts, this.db, dev, genericResponse));
+                console.log(`registering path ${path} with type patch`);
+                this.serv.patch(path, cors({
+                    origin: conf.prod ? 'https://divine.frl' : 'http://localhost:5173',
+                    credentials: true,
+                    methods: ['GET', 'POST', 'OPTIONS']
+                }), async (req, res) => await this.defaultHandler(req, res, callbackOpts, this.db, dev, genericResponse));
                 break;
             case RequestType.OPTIONS: 
-                this.serv.router.options(path, async (req, res) => await this.defaultHandler(req, res, callbackOpts, this.db, dev, genericResponse));
+                console.log(`registering path ${path} with type options`);
+                this.serv.options(path, cors({
+                    origin: conf.prod ? 'https://divine.frl' : 'http://localhost:5173',
+                    credentials: true,
+                    methods: ['GET', 'POST', 'OPTIONS']
+                }), async (req, res) => await this.defaultHandler(req, res, callbackOpts, this.db, dev, genericResponse));
                 break;
             default: return Promise.reject(`unknown request type ${type}`);
         }

@@ -20,7 +20,8 @@ export interface UserProps {
     created: Date,
     refer: string,
     pfp_url: string,
-    bio: string | null
+    bio: string | null,
+    songs: string | null
 }
 
 export interface FilteredUserProps {
@@ -31,6 +32,7 @@ export interface FilteredUserProps {
     created: Date,
     pfp_url: string,
     bio: string | null,
+    songs: string | null
     owns: boolean
 }
 
@@ -42,6 +44,7 @@ export interface FullFilteredUserProps {
     created: Date,
     pfp_url: string,
     bio: string | null,
+    songs: UserSong[],
     owns: boolean,
     links: FilteredUserLink[]
 }
@@ -63,4 +66,13 @@ export interface UserLink {
 export interface FilteredUserLink {
     type: ALLOWED_ICON_TYPES,
     redir: string
+}
+
+export interface UserSong {
+    id: number,
+    uid: number,
+    name: string,
+    artist: string,
+    cover_src: string,
+    audio_src: string
 }

@@ -6,6 +6,7 @@ import Users from "./tables/user.ts";
 import Refers from "./tables/refer.ts";
 import Sessions from "./tables/session.ts";
 import UserLinks from "./tables/userlinks.ts";
+import UserSongs from "./tables/usersongs.ts";
 
 export default class Database {
     private db: NodePgDatabase;
@@ -13,6 +14,7 @@ export default class Database {
     private refers: Refers;
     private sessions: Sessions;
     private userLinks: UserLinks;
+    private userSongs: UserSongs;
 
     constructor() {
         // connect with da drizzleanator
@@ -26,6 +28,7 @@ export default class Database {
         this.refers = new Refers(this);
         this.sessions = new Sessions(this);
         this.userLinks = new UserLinks(this);
+        this.userSongs = new UserSongs(this);
     }
 
     private async testDbConnection(): Promise<boolean> {
@@ -63,5 +66,9 @@ export default class Database {
     public getUserLinks(): UserLinks {
         // okay im done now
         return this.userLinks;
+    }
+
+    public getUserSongs(): UserSongs {
+        return this.userSongs;
     }
 }

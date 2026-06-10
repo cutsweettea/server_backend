@@ -21,7 +21,7 @@ serv.use(cors({
     origin: conf.prod ? 'https://divine.frl' : 'http://localhost:5173',
     credentials: true,
     methods: ['GET', 'POST', 'OPTIONS']
-}))
+}));
 
 // setup db
 const db = new Database();

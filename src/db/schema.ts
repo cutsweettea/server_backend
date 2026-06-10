@@ -1,5 +1,5 @@
 import { pgTable, integer, varchar, timestamp } from "drizzle-orm/pg-core";
-import { BIO_MAX_LEN, DEFAULT_PFP_URL, ICON_LINK_MAX_LEN, ICON_LINK_TYPE_MAX_LEN, LOGIN_NAME_MAX_LEN, PFP_URL_MAX_LEN, PGP_MAX_LEN, PWD_HASH_MAX_LEN, REFER_MAX_LEN, REG_LINK_MAX_LEN, SESSION_ID_LEN, SESSION_NAME_MAX_LEN, TAG_MAX_LEN, USER_NAME_MAX_LEN } from "../consts.ts";
+import { ARTIST_MAX_LEN, AUDIO_SRC_MAX_LEN, BIO_MAX_LEN, COVER_SRC_MAX_LEN, DEFAULT_PFP_URL, ICON_LINK_MAX_LEN, ICON_LINK_TYPE_MAX_LEN, LOGIN_NAME_MAX_LEN, PFP_URL_MAX_LEN, PGP_MAX_LEN, PWD_HASH_MAX_LEN, REFER_MAX_LEN, REG_LINK_MAX_LEN, SESSION_ID_LEN, SESSION_NAME_MAX_LEN, SONG_ID_LIST_MAX_LEN, SONG_NAME_MAX_LEN, TAG_MAX_LEN, USER_NAME_MAX_LEN } from "../consts.ts";
 import { sql } from "drizzle-orm";
 
 export const usersTable = pgTable('users', {
@@ -13,7 +13,8 @@ export const usersTable = pgTable('users', {
     created: timestamp().defaultNow().notNull(),
     refer: varchar({ length: REFER_MAX_LEN }).notNull(),
     pfp_url: varchar({ length: PFP_URL_MAX_LEN }).default(DEFAULT_PFP_URL).notNull(),
-    bio: varchar({ length: BIO_MAX_LEN })
+    bio: varchar({ length: BIO_MAX_LEN }),
+    songs: varchar({ length: SONG_ID_LIST_MAX_LEN })
 });
 
 export const referralsTable = pgTable('refers', {
@@ -36,4 +37,13 @@ export const userLinksTable = pgTable('user_links', {
     uid: integer().notNull().references(() => usersTable.id),
     type: varchar({ length: ICON_LINK_TYPE_MAX_LEN }).notNull(),
     redir: varchar({ length: ICON_LINK_MAX_LEN }).notNull()
+});
+
+export const usersSongsTable = pgTable('user_songs', {
+    id: integer().primaryKey().generatedAlwaysAsIdentity(),
+    uid: integer().notNull().references(() => usersTable.id),
+    name: varchar({ length: SONG_NAME_MAX_LEN }).notNull(),
+    artist: varchar({ length: ARTIST_MAX_LEN }).notNull(),
+    cover_src: varchar({ length: COVER_SRC_MAX_LEN }).notNull(),
+    audio_src: varchar({ length: AUDIO_SRC_MAX_LEN }).notNull()
 });

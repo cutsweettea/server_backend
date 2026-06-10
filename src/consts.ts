@@ -17,6 +17,11 @@ export const MAX_MAX_USES = 100;
 export const SALT_MAX_LEN = 16;
 export const ICON_LINK_MAX_LEN = 512;
 export const ICON_LINK_TYPE_MAX_LEN = 32;
+export const SONG_NAME_MAX_LEN = 64;
+export const ARTIST_MAX_LEN = 32;
+export const COVER_SRC_MAX_LEN = 128;
+export const AUDIO_SRC_MAX_LEN = 128;
+export const SONG_ID_LIST_MAX_LEN = 64;
 
 // session ident / secret constants
 export const SESSION_ID_LEN = 32;
@@ -134,6 +139,7 @@ export const DEV_REFER_SET_BODY_STRUCT = z.object({
 // generic responses
 export const ACCOUNT_CREATE_FAIL = 'failed creating account';
 export const ACCOUNT_GET_FAIL = 'failed getting account';
+export const ACCOUNT_SONGS_GET_FAIL = 'failed getting account';
 export const ACCOUNT_GET_LINKS_FAIL = 'failed getting links';
 export const INVALID_REFERRAL = 'invalid referral';
 export const ACCOUNT_LOGIN_FAIL = 'failed to login';

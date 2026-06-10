@@ -114,7 +114,8 @@ export function filterUserData(data: UserProps, session_user: UserProps): Filter
         pgp: data.pgp,
         rank: data.rank,
         tag: data.tag,
-        user_name: data.user_name
+        user_name: data.user_name,
+        songs: data.songs
     }
 }
 
