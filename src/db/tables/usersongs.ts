@@ -37,15 +37,11 @@ export default class UserSongs {
         if(!user.songs) return Promise.resolve([]);
         const songs = user.songs.split(',');
 
-        const q = this.db.getDb().select()
-            .from(usersSongsTable)
-            .where(generateOrRecursive(songs));
-
-        console.log(q.toSQL());
-
         let select_res;
         try {
-            select_res = await q;
+            select_res = await this.db.getDb().select()
+            .from(usersSongsTable)
+            .where(generateOrRecursive(songs));
         } catch(e) {
             console.log(e);
             return Promise.reject(ACCOUNT_SONGS_GET_FAIL);
