@@ -1,5 +1,8 @@
 import z from "zod";
 import { type Theme } from "./db/interfaces.ts";
+import { PgTransaction } from "drizzle-orm/pg-core";
+import { type NodePgQueryResultHKT } from "drizzle-orm/node-postgres";
+import { type ExtractTablesWithRelations } from "drizzle-orm";
 
 // schema consts
 export const LOGIN_NAME_MAX_LEN = 32;
@@ -39,6 +42,11 @@ export const ALLOWED_ICON_TYPES_LIST = [
   "tiktok",
 ] as const;
 export type ALLOWED_ICON_TYPES = (typeof ALLOWED_ICON_TYPES_LIST)[number];
+export type TX_TYPE = PgTransaction<
+  NodePgQueryResultHKT,
+  Record<string, never>,
+  ExtractTablesWithRelations<Record<string, never>>
+>;
 
 // defaults
 export const DEFAULT_PFP_URL = "https://cdn.divine.frl/r/user";
@@ -153,12 +161,13 @@ export const ACCOUNT_EDIT_BODY_STRUCT = z.object({
   tag: TAG_FIELD,
   themeValues: z.object({
     backgroundColor: THEME_VALUE_FIELD,
-    backgroundColordark: THEME_VALUE_FIELD,
+    backgroundColorDark: THEME_VALUE_FIELD,
     pfpBorderColor: THEME_VALUE_FIELD,
     pfpBorderGlowColor: THEME_VALUE_FIELD,
     textColor: THEME_VALUE_FIELD,
     textColorDarker: THEME_VALUE_FIELD,
   }),
+  links: z.object(),
   userName: USER_NAME_FIELD,
 });
 

@@ -145,5 +145,5 @@ export async function defUpdateUser({ req, res, db }: RouteCallbackProps) {
     return res.status(400).send(generateResponse(false, ACCOUNT_EDIT_FAIL));
   }
 
-  res.status(200).send(generateResponse(false, "okay"));
+  res.status(200).send(generateResponse(true, "okay"));
 }

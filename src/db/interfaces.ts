@@ -80,6 +80,12 @@ export interface FilteredUserLink {
   redir: string;
 }
 
+export interface UserLinkDB {
+  type: ALLOWED_ICON_TYPES;
+  redir: string;
+  uid: number;
+}
+
 export interface UserSong {
   id: number;
   uid: number;
@@ -94,5 +100,6 @@ export interface UserEditData {
   bio: string;
   tag: string;
   themeValues: Theme;
+  links: Record<number, FilteredUserLink>;
   userName: string;
 }

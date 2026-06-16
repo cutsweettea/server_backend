@@ -98,8 +98,8 @@ async function registerRoutes() {
     path: "/account/edit",
     defCallbackOpts: {
       callback: defUpdateUser,
+      requiredBodyValues: ACCOUNT_EDIT_BODY_STRUCT,
     },
-    genericResponse: ACCOUNT_EDIT_FAIL,
   });
 
   await rr.get({

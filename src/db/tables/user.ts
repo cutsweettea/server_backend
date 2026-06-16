@@ -1,19 +1,18 @@
-import { NodePgDatabase } from "drizzle-orm/node-postgres";
 import type {
-  FullFilteredUserProps,
+  FilteredUserLink,
   UserEditData,
+  UserLinkDB,
   UserProps,
 } from "../interfaces.ts";
 import Database from "../database.ts";
 import { defaultHash, extractSalt, genRandom } from "../../util.ts";
-import { usersTable } from "../schema.ts";
-import { id } from "zod/locales";
+import { userLinksTable, usersTable } from "../schema.ts";
 import {
   ACCOUNT_CREATE_FAIL,
   ACCOUNT_EDIT_FAIL,
   ACCOUNT_GET_FAIL,
-  ACCOUNT_LOGIN_FAIL,
   SESSION_NOT_FOUND,
+  type TX_TYPE,
 } from "../../consts.ts";
 import { eq } from "drizzle-orm";
 
@@ -179,6 +178,49 @@ export default class Users {
     return user;
   }
 
+  private async clearUserLinks(uid: number, tx: TX_TYPE): Promise<void> {
+    try {
+      await tx.delete(userLinksTable).where(eq(userLinksTable.uid, uid));
+    } catch (e) {
+      return Promise.reject(e);
+    }
+
+    return Promise.resolve();
+  }
+
+  private async insertUserLinks(
+    uid: number,
+    links: Record<number, FilteredUserLink>,
+    tx: TX_TYPE,
+  ): Promise<void> {
+    const links_keys = Object.keys(links);
+    let values: UserLinkDB[] = [];
+    for (let i = 0; i < links_keys.length; i++) {
+      const k = Number(links_keys[i]);
+      const v = links[k];
+      console.log(`k=${k}, v=${JSON.stringify(v)}`);
+      if (!v) continue;
+      const nv = {
+        ...v,
+        uid: uid,
+      };
+      console.log(`nv=${JSON.stringify(nv)}\n`);
+      values.push(nv);
+    }
+
+    console.log(`values=${JSON.stringify(values)}`);
+    let insert_res;
+    try {
+      insert_res = await tx.insert(userLinksTable).values(values).returning();
+    } catch (e) {
+      return Promise.reject(e);
+    }
+
+    console.log(insert_res.length, values.length);
+    if (insert_res.length != values.length) return Promise.reject();
+    return Promise.resolve();
+  }
+
   public async editUser(uid: number, data: UserEditData): Promise<void> {
     let update_res;
     try {
@@ -196,6 +238,16 @@ export default class Users {
     } catch (e) {
       console.log(e);
       return Promise.reject(ACCOUNT_EDIT_FAIL);
+    }
+
+    try {
+      await this.db.getDb().transaction(async (tx) => {
+        await this.clearUserLinks(uid, tx);
+        if (Object.keys(data.links).length != 0)
+          await this.insertUserLinks(uid, data.links, tx);
+      });
+    } catch (e) {
+      return Promise.reject();
     }
 
     if (update_res.length == 0) return Promise.reject(ACCOUNT_GET_FAIL);
