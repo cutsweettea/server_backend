@@ -122,9 +122,6 @@ export async function defGetUser({ req, res, db }: RouteCallbackProps) {
 }
 
 export async function defUpdateUser({ req, res, db }: RouteCallbackProps) {
-  if (!req.body)
-    return res.status(400).send(generateResponse(false, ACCOUNT_EDIT_FAIL));
-
   const cookies = conf.prod ? req.signedCookies : req.cookies;
   if (!Object.keys(cookies).includes("sid"))
     return res.status(400).send(generateResponse(false, ACCOUNT_EDIT_FAIL));
@@ -145,5 +142,5 @@ export async function defUpdateUser({ req, res, db }: RouteCallbackProps) {
     return res.status(400).send(generateResponse(false, ACCOUNT_EDIT_FAIL));
   }
 
-  res.status(200).send(generateResponse(true, "okay"));
+  return res.status(200).send(generateResponse(true, "okay"));
 }
