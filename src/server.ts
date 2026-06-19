@@ -2,7 +2,7 @@ import express from "express";
 import RouteRegistrar from "./routes/registrar.ts";
 import conf from "./config.ts";
 import cookieParser from "cookie-parser";
-import { generateResponse } from "./util.ts";
+import { defaultVerify, generateResponse } from "./util.ts";
 import Database from "./db/database.ts";
 import {
   defCreateAccount,
@@ -49,7 +49,7 @@ serv.use(
     methods: ["GET", "POST", "OPTIONS"],
   }),
 );
-serv.use((req, res, next) => {
+serv.use(async (req, res, next) => {
   const auth_header = req.headers[X_AUTHENTICATION_HEADER];
   if (typeof auth_header !== "string") {
     next();
@@ -64,7 +64,26 @@ serv.use((req, res, next) => {
     return;
   }
 
-  console.log(`${method} w/ ${auth}`);
+  if (method != "discord") {
+    next();
+    return;
+  }
+
+  let verified;
+  try {
+    verified = await defaultVerify(conf.discordSecret, auth);
+  } catch (e) {
+    next();
+    return;
+  }
+
+  if (!verified) {
+    console.log("failed verify");
+    next();
+    return;
+  }
+
+  console.log("verified");
   next();
 });
 
