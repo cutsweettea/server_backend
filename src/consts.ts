@@ -209,3 +209,4 @@ export const ACCOUNT_LOGIN_FAIL = "failed to login";
 export const ACCESS_FAIL = "fail";
 export const ACCESS_SUCCESS = "success";
 export const SESSION_NOT_FOUND = "invalid session";
+export const DELETE_SESSION_FAIL = "failed deleting session";

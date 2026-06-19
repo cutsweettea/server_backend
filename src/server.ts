@@ -14,16 +14,6 @@ import z from "zod";
 import {
   ADMIN_ACCOUNT_CREATE_BODY_STRUCT,
   ACCOUNT_CREATE_BODY_STRUCT,
-  ADMIN_SESSION,
-  BIO_FIELD,
-  LOGIN_NAME_FIELD,
-  PFP_URL_FIELD,
-  PGP_FIELD,
-  PWD_FIELD,
-  RANK_FIELD,
-  REFER_FIELD,
-  TAG_FIELD,
-  USER_NAME_FIELD,
   ADMIN_REFER_CREATE_BODY_STRUCT,
   DEV_REFER_USE_BODY_STRUCT,
   DEV_REFER_SET_BODY_STRUCT,
@@ -31,7 +21,6 @@ import {
   ACCOUNT_LOGIN_FAIL,
   ACCESS_FAIL,
   ACCOUNT_GET_FAIL,
-  ACCOUNT_EDIT_FAIL,
   ACCOUNT_EDIT_BODY_STRUCT,
 } from "./consts.ts";
 import { devCreateAccount } from "./routes/dev/users.ts";
@@ -45,6 +34,7 @@ import {
   defLogin,
   defAccess,
   defLevelAccess,
+  defLogout,
 } from "./routes/default/sessions.ts";
 
 // setup server and middleware
@@ -58,6 +48,12 @@ serv.use(
     methods: ["GET", "POST", "OPTIONS"],
   }),
 );
+serv.use((req, res, next) => {
+  console.log(
+    `req to ${req.url} w/ headers ${JSON.stringify(req.headers, null, 2)}`,
+  );
+  next();
+});
 
 // setup db
 const db = new Database();
@@ -99,6 +95,13 @@ async function registerRoutes() {
     defCallbackOpts: {
       callback: defUpdateUser,
       requiredBodyValues: ACCOUNT_EDIT_BODY_STRUCT,
+    },
+  });
+
+  await rr.get({
+    path: "/account/logout",
+    defCallbackOpts: {
+      callback: defLogout,
     },
   });
 
