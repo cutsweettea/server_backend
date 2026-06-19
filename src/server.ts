@@ -22,6 +22,7 @@ import {
   ACCESS_FAIL,
   ACCOUNT_GET_FAIL,
   ACCOUNT_EDIT_BODY_STRUCT,
+  X_AUTHENTICATION_HEADER,
 } from "./consts.ts";
 import { devCreateAccount } from "./routes/dev/users.ts";
 import {
@@ -49,9 +50,21 @@ serv.use(
   }),
 );
 serv.use((req, res, next) => {
-  console.log(
-    `req to ${req.url} w/ headers ${JSON.stringify(req.headers, null, 2)}`,
-  );
+  const auth_header = req.headers[X_AUTHENTICATION_HEADER];
+  if (typeof auth_header !== "string") {
+    next();
+    return;
+  }
+
+  const ahspl = auth_header.split("_");
+  const method = ahspl[0];
+  const auth = ahspl[1];
+  if (!method || !auth) {
+    next();
+    return;
+  }
+
+  console.log(`${method} w/ ${auth}`);
   next();
 });
 

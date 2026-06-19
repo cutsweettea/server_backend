@@ -34,6 +34,9 @@ export const ADMIN_SESSION_ID_LEN = 64;
 export const SESSION_NAME_MAX_LEN = 32;
 export const DEV_SECRET_MAX_LEN = 512;
 
+// header names
+export const X_AUTHENTICATION_HEADER = "x-authentication";
+
 // types
 export const ALLOWED_ICON_TYPES_LIST = [
   "github",
