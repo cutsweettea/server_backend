@@ -83,8 +83,7 @@ serv.use(async (req, res, next) => {
     return;
   }
 
-  console.log("verified");
-  next();
+  return res.status(200).send("okay");
 });
 
 // setup db
