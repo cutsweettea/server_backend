@@ -63,6 +63,21 @@ export async function defLevelAccess({ req, res, db }: RouteCallbackProps) {
   return res.status(200).send(generateResponse(true, "success"));
 }
 
+export async function defDiscordAccess({ req, res, db }: RouteCallbackProps) {
+  const ref = req.params.ref;
+  if (typeof ref !== "string")
+    return res.status(400).send(generateResponse(false, ACCESS_FAIL));
+
+  try {
+    await db.getDiscord().getRef(ref);
+  } catch (e) {
+    console.log(e);
+    return res.status(400).send(generateResponse(false, ACCESS_FAIL));
+  }
+
+  return res.status(200).send(generateResponse(true, "success"));
+}
+
 export async function defLogout({ req, res, db }: RouteCallbackProps) {
   const cookies = conf.prod ? req.signedCookies : req.cookies;
   if (!Object.keys(cookies).includes("sid"))

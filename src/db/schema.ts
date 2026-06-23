@@ -17,7 +17,7 @@ import {
   LOGIN_NAME_MAX_LEN,
   PFP_URL_MAX_LEN,
   PGP_MAX_LEN,
-  PWD_HASH_MAX_LEN,
+  DEFAULT_HASH_MAX_LEN,
   REFER_MAX_LEN,
   REG_LINK_MAX_LEN,
   SESSION_ID_LEN,
@@ -26,6 +26,7 @@ import {
   SONG_NAME_MAX_LEN,
   TAG_MAX_LEN,
   USER_NAME_MAX_LEN,
+  DISCORD_REF_MAX_LEN,
 } from "../consts.ts";
 import { sql } from "drizzle-orm";
 import { type Theme } from "./interfaces.ts";
@@ -35,7 +36,7 @@ export const usersTable = pgTable("users", {
   login_name: varchar({ length: LOGIN_NAME_MAX_LEN }).notNull().unique(),
   user_name: varchar({ length: USER_NAME_MAX_LEN }).notNull().unique(),
   tag: varchar({ length: TAG_MAX_LEN }).notNull(),
-  pwd_hash: varchar({ length: PWD_HASH_MAX_LEN }).notNull(),
+  pwd_hash: varchar({ length: DEFAULT_HASH_MAX_LEN }).notNull(),
   pgp: varchar({ length: PGP_MAX_LEN }),
   rank: integer().default(0).notNull(),
   created: timestamp().defaultNow().notNull(),
@@ -46,6 +47,7 @@ export const usersTable = pgTable("users", {
   bio: varchar({ length: BIO_MAX_LEN }),
   songs: varchar({ length: SONG_ID_LIST_MAX_LEN }),
   theme: jsonb("theme").$type<Theme>().notNull().default(DEFAULT_THEME),
+  dch: varchar({ length: DEFAULT_HASH_MAX_LEN }),
 });
 
 export const referralsTable = pgTable("refers", {
@@ -88,4 +90,12 @@ export const usersSongsTable = pgTable("user_songs", {
   cover_src: varchar({ length: COVER_SRC_MAX_LEN }).notNull(),
   audio_src: varchar({ length: AUDIO_SRC_MAX_LEN }).notNull(),
   created: timestamp().notNull().defaultNow(),
+});
+
+export const discordReferralsTable = pgTable("discord_refs", {
+  id: varchar({ length: DISCORD_REF_MAX_LEN }).primaryKey().notNull(),
+  info: varchar({ length: DEFAULT_HASH_MAX_LEN }).notNull(),
+  expiry: timestamp()
+    .notNull()
+    .default(sql`CURRENT_TIMESTAMP + INTERVAL '10 MINUTE'`),
 });

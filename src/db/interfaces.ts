@@ -103,3 +103,8 @@ export interface UserEditData {
   links: Record<number, FilteredUserLink>;
   userName: string;
 }
+
+export interface DiscordRef {
+  id: string;
+  info: string;
+}

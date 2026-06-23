@@ -7,68 +7,77 @@ import Refers from "./tables/refer.ts";
 import Sessions from "./tables/session.ts";
 import UserLinks from "./tables/userlinks.ts";
 import UserSongs from "./tables/usersongs.ts";
+import Discord from "./tables/discord.ts";
 
 export default class Database {
-    private db: NodePgDatabase;
-    private users: Users;
-    private refers: Refers;
-    private sessions: Sessions;
-    private userLinks: UserLinks;
-    private userSongs: UserSongs;
+  private db: NodePgDatabase;
+  private users: Users;
+  private refers: Refers;
+  private sessions: Sessions;
+  private userLinks: UserLinks;
+  private userSongs: UserSongs;
+  private discord: Discord;
 
-    constructor() {
-        // connect with da drizzleanator
-        this.db = drizzle(new Pool({
-            connectionString: conf.dbConnDev
-        }));
+  constructor() {
+    // connect with da drizzleanator
+    this.db = drizzle(
+      new Pool({
+        connectionString: conf.dbConnDev,
+      }),
+    );
 
-        this.testDbConnection();
+    this.testDbConnection();
 
-        this.users = new Users(this);
-        this.refers = new Refers(this);
-        this.sessions = new Sessions(this);
-        this.userLinks = new UserLinks(this);
-        this.userSongs = new UserSongs(this);
+    this.users = new Users(this);
+    this.refers = new Refers(this);
+    this.sessions = new Sessions(this);
+    this.userLinks = new UserLinks(this);
+    this.userSongs = new UserSongs(this);
+    this.discord = new Discord(this);
+  }
+
+  private async testDbConnection(): Promise<boolean> {
+    // attempt to see if db is connected
+    try {
+      await this.db.execute(sql`SELECT 1`);
+      console.log("db test succeeded");
+      return true;
+    } catch (err) {
+      console.log(`db conn failed: ${err}`);
+      return false;
     }
+  }
 
-    private async testDbConnection(): Promise<boolean> {
-        // attempt to see if db is connected
-        try {
-            await this.db.execute(sql`SELECT 1`);
-            console.log('db test succeeded');
-            return true;
-        } catch(err) {
-            console.log(`db conn failed: ${err}`);
-            return false;
-        }
-    }
+  public getDb(): NodePgDatabase {
+    // what u think this do
+    return this.db;
+  }
 
-    public getDb(): NodePgDatabase {
-        // what u think this do
-        return this.db;
-    }
+  public getUsers(): Users {
+    // do i need to write comments for these, no. will i, yes
+    return this.users;
+  }
 
-    public getUsers(): Users {
-        // do i need to write comments for these, no. will i, yes
-        return this.users;
-    }
+  public getRefers(): Refers {
+    // yep ill continue writing comments thank u
+    return this.refers;
+  }
 
-    public getRefers(): Refers {
-        // yep ill continue writing comments thank u
-        return this.refers;
-    }
+  public getSessions(): Sessions {
+    // get all em sessions
+    return this.sessions;
+  }
 
-    public getSessions(): Sessions {
-        // get all em sessions
-        return this.sessions;
-    }
+  public getUserLinks(): UserLinks {
+    // okay im done now
+    return this.userLinks;
+  }
 
-    public getUserLinks(): UserLinks {
-        // okay im done now
-        return this.userLinks;
-    }
+  public getUserSongs(): UserSongs {
+    return this.userSongs;
+  }
 
-    public getUserSongs(): UserSongs {
-        return this.userSongs;
-    }
+  public getDiscord(): Discord {
+    return this.discord;
+  }
 }

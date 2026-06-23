@@ -23,6 +23,9 @@ import {
   ACCOUNT_GET_FAIL,
   ACCOUNT_EDIT_BODY_STRUCT,
   X_AUTHENTICATION_HEADER,
+  DISCORD_REF_CREATE_FAIL,
+  ACCOUNT_DISCORD_LOGIN_BODY_STRUCT,
+  DISCORD_LINK_GEN_BODY_STRUCT,
 } from "./consts.ts";
 import { devCreateAccount } from "./routes/dev/users.ts";
 import {
@@ -36,7 +39,12 @@ import {
   defAccess,
   defLevelAccess,
   defLogout,
+  defDiscordAccess,
 } from "./routes/default/sessions.ts";
+import {
+  defAuthorizeDiscordRef,
+  defCreateDiscordRef,
+} from "./routes/default/discord.ts";
 
 // setup server and middleware
 const serv = express();
@@ -49,42 +57,6 @@ serv.use(
     methods: ["GET", "POST", "OPTIONS"],
   }),
 );
-serv.use(async (req, res, next) => {
-  const auth_header = req.headers[X_AUTHENTICATION_HEADER];
-  if (typeof auth_header !== "string") {
-    next();
-    return;
-  }
-
-  const ahspl = auth_header.split("_");
-  const method = ahspl[0];
-  const auth = ahspl[1];
-  if (!method || !auth) {
-    next();
-    return;
-  }
-
-  if (method != "discord") {
-    next();
-    return;
-  }
-
-  let verified;
-  try {
-    verified = await defaultVerify(conf.discordSecret, auth);
-  } catch (e) {
-    next();
-    return;
-  }
-
-  if (!verified) {
-    console.log("failed verify");
-    next();
-    return;
-  }
-
-  return res.status(200).send("okay");
-});
 
 // setup db
 const db = new Database();
@@ -150,6 +122,31 @@ async function registerRoutes() {
       callback: defLevelAccess,
     },
     genericResponse: ACCESS_FAIL,
+  });
+
+  await rr.get({
+    path: "/discord/access/:ref",
+    defCallbackOpts: {
+      callback: defDiscordAccess,
+    },
+    genericResponse: ACCESS_FAIL,
+  });
+
+  await rr.post({
+    path: "/discord/authorize",
+    defCallbackOpts: {
+      callback: defAuthorizeDiscordRef,
+      requiredBodyValues: ACCOUNT_DISCORD_LOGIN_BODY_STRUCT,
+    },
+    genericResponse: ACCESS_FAIL,
+  });
+
+  await rr.post({
+    path: "/discord/gen",
+    defCallbackOpts: {
+      callback: defCreateDiscordRef,
+      requiredBodyValues: DISCORD_LINK_GEN_BODY_STRUCT,
+    },
   });
 
   // non-production routes

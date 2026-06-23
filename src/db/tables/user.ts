@@ -11,6 +11,7 @@ import {
   ACCOUNT_CREATE_FAIL,
   ACCOUNT_EDIT_FAIL,
   ACCOUNT_GET_FAIL,
+  DISCORD_REF_UPDATE_FAIL,
   SESSION_NOT_FOUND,
   type TX_TYPE,
 } from "../../consts.ts";
@@ -37,7 +38,6 @@ export default class Users {
   ): Promise<string> {
     // hash password and extract salt
     const hash = await defaultHash(pwd);
-    console.log(`og hash: ${hash}`);
     const pwd_info = await extractSalt(hash);
 
     if (login_name == user_name)
@@ -251,6 +251,25 @@ export default class Users {
     }
 
     if (update_res.length == 0) return Promise.reject(ACCOUNT_GET_FAIL);
+    return Promise.resolve();
+  }
+
+  public async editUserDiscordHash(uid: number, hash: string): Promise<void> {
+    let update_res;
+    try {
+      update_res = await this.db
+        .getDb()
+        .update(usersTable)
+        .set({
+          dch: hash,
+        })
+        .where(eq(usersTable.id, uid))
+        .returning();
+    } catch (e) {
+      return Promise.reject(DISCORD_REF_UPDATE_FAIL);
+    }
+
+    if (update_res.length == 0) return Promise.reject(DISCORD_REF_UPDATE_FAIL);
     return Promise.resolve();
   }
 }
