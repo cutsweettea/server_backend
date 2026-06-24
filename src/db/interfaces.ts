@@ -104,7 +104,13 @@ export interface UserEditData {
   userName: string;
 }
 
+export interface DiscordRefInfo {
+  username: string;
+  id: string;
+}
+
 export interface DiscordRef {
   id: string;
-  info: string;
+  info: DiscordRefInfo;
+  expiry: Date;
 }

@@ -45,6 +45,7 @@ import {
   defAuthorizeDiscordRef,
   defCreateDiscordRef,
 } from "./routes/default/discord.ts";
+import SocketServer from "./socket/socketserver.ts";
 
 // setup server and middleware
 const serv = express();
@@ -189,7 +190,11 @@ async function registerRoutes() {
 
 registerRoutes();
 
-serv.listen(conf.port, () => {
+const ss = new SocketServer(serv, db);
+export default ss;
+
+/*serv.listen(conf.port, () => {
   console.log(`listening on port ${conf.port} with prod=${conf.prod}`);
   console.log(`registered ${rr.routeCount()} routes`);
 });
+*/

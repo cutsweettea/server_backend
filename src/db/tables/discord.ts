@@ -1,7 +1,7 @@
-import { eq } from "drizzle-orm";
+import { eq, lt, sql } from "drizzle-orm";
 import Database from "../database.ts";
 import { discordReferralsTable } from "../schema.ts";
-import { type DiscordRef } from "../interfaces.ts";
+import { type DiscordRefInfo, type DiscordRef } from "../interfaces.ts";
 import {
   DISCORD_REF_CREATE_FAIL,
   DISCORD_REF_DELETE_FAIL,
@@ -17,6 +17,13 @@ export default class Discord {
   }
 
   public async getRef(id: string): Promise<DiscordRef> {
+    try {
+      await this.deleteOldRefs();
+    } catch (e) {
+      console.log(e);
+      return Promise.reject(DISCORD_REF_GET_FAIL);
+    }
+
     let select_res;
     try {
       select_res = await this.db
@@ -35,13 +42,10 @@ export default class Discord {
 
     const cdate = new Date();
     cdate.setHours(cdate.getHours() - 4);
-    console.log(
-      `${ref.expiry} ?<= ${cdate} ? ${ref.expiry.getTime() <= cdate.getTime()}`,
-    );
-    if (ref.expiry.getTime() <= cdate.getTime()) {
-      console.log("expired");
+
+    if (ref.expiry.getTime() <= cdate.getTime())
       return Promise.reject(DISCORD_REF_GET_FAIL);
-    }
+
     return ref;
   }
 
@@ -61,7 +65,54 @@ export default class Discord {
     return Promise.resolve();
   }
 
-  public async createRef(info_hash: string): Promise<string> {
+  private async getRefsFromId(id: string): Promise<DiscordRef[]> {
+    let select_res;
+    try {
+      select_res = await this.db
+        .getDb()
+        .select()
+        .from(discordReferralsTable)
+        .where(eq(sql`${discordReferralsTable.id}`, id));
+    } catch (e) {
+      console.log(e);
+      return Promise.reject(DISCORD_REF_GET_FAIL);
+    }
+
+    return select_res;
+  }
+
+  private async deleteOldRefs(): Promise<void> {
+    try {
+      await this.db
+        .getDb()
+        .delete(discordReferralsTable)
+        .where(lt(discordReferralsTable.expiry, sql`NOW()`));
+    } catch (e) {
+      console.log(e);
+      return Promise.reject();
+    }
+
+    return Promise.resolve();
+  }
+
+  public async createRef(info: DiscordRefInfo): Promise<string> {
+    try {
+      await this.deleteOldRefs();
+    } catch (e) {
+      console.log(e);
+      return Promise.reject(DISCORD_REF_GET_FAIL);
+    }
+
+    let existing_refs: DiscordRef[] = [];
+    try {
+      existing_refs = await this.getRefsFromId(info.id);
+    } catch (e) {
+      console.log(e);
+      return Promise.reject(DISCORD_REF_GET_FAIL);
+    }
+
+    if (existing_refs.length > 0) return Promise.reject(DISCORD_REF_GET_FAIL);
+
     const id = genRandom(16);
     let insert_res;
     try {
@@ -70,7 +121,7 @@ export default class Discord {
         .insert(discordReferralsTable)
         .values({
           id: id,
-          info: info_hash,
+          info: info,
         })
         .returning();
     } catch (e) {

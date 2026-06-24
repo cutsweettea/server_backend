@@ -135,6 +135,8 @@ export const SALT_FIELD = z
   .max(SALT_MAX_LEN, { error: `salt must be <= ${SALT_MAX_LEN} characters` });
 export const THEME_VALUE_FIELD = z.string().max(THEME_VALUE_MAX_LEN);
 export const DISCORD_REF_FIELD = z.string().max(DISCORD_REF_MAX_LEN);
+export const DISCORD_ID_FIELD = z.string().min(1).max(24);
+export const DISCORD_NAME_FIELD = z.string().min(1).max(24);
 
 // zod sessions / secrets
 export const ADMIN_SESSION = z.string().length(ADMIN_SESSION_ID_LEN, {
@@ -211,7 +213,8 @@ export const DEV_REFER_SET_BODY_STRUCT = z.object({
 });
 
 export const DISCORD_LINK_GEN_BODY_STRUCT = z.object({
-  uid: z.string().min(1),
+  uid: DISCORD_ID_FIELD,
+  usn: DISCORD_NAME_FIELD,
 });
 
 // generic responses

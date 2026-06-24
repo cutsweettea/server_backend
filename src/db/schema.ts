@@ -29,7 +29,7 @@ import {
   DISCORD_REF_MAX_LEN,
 } from "../consts.ts";
 import { sql } from "drizzle-orm";
-import { type Theme } from "./interfaces.ts";
+import { type DiscordRefInfo, type Theme } from "./interfaces.ts";
 
 export const usersTable = pgTable("users", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
@@ -94,7 +94,7 @@ export const usersSongsTable = pgTable("user_songs", {
 
 export const discordReferralsTable = pgTable("discord_refs", {
   id: varchar({ length: DISCORD_REF_MAX_LEN }).primaryKey().notNull(),
-  info: varchar({ length: DEFAULT_HASH_MAX_LEN }).notNull(),
+  info: jsonb("info").$type<DiscordRefInfo>().notNull(),
   expiry: timestamp()
     .notNull()
     .default(sql`CURRENT_TIMESTAMP + INTERVAL '10 MINUTE'`),
